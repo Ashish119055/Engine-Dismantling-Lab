@@ -948,7 +948,22 @@ part('block',{sys:'block',fixed:true,housing:true,
   d:A('એન્જિનનો મુખ્ય ભાગ: 4 સિલિન્ડર બોર, વોટર જેકેટ, ઓઇલ ગેલેરી અને મેઇન બેરિંગ સેડલ. બાકીના બધા ભાગ તેના પર લાગે, એટલે તે સ્ટેન્ડ પર જ રહે.','इंजन का मुख्य भाग: 4 सिलेंडर बोर, वॉटर जैकेट, ऑयल गैलरी और मेन बेयरिंग सैडल. बाकी सब भाग इस पर लगते हैं, इसलिए यह स्टैंड पर ही रहता है.','The engine\'s backbone: 4 bores, water jackets, oil galleries and main-bearing saddles. Everything bolts to it, so it stays on the stand.'),
   m:A('ગ્રે કાસ્ટ આયર્ન','ग्रे कास्ट आयरन','Grey cast iron'),s:A('બોર પિચ 102 mm','बोर पिच 102 mm','Bore pitch 102 mm'),f:A('સ્ટેન્ડ પર, 4 × M12','स्टैंड पर, 4 × M12','On the stand, 4 × M12')},g=>{
   const top=rrShape(4.0,1.5,0.05);XS.forEach(x=>top.holes.push(circlePath(x,0,0.4)));
-  g.add(mesh(extY(top,1.2,0,48),M.block,0,0.95,0));
+  g.add(mesh(extY(top,1.188,0,48),M.block,0,0.95,0));
+  // machined deck: bores, coolant passages to the head, 10 head-bolt holes (dark = openings), 2 dowels
+  const deck=rrShape(4.0,1.5,0.05),holes=[];XS.forEach(x=>{deck.holes.push(circlePath(x,0,0.4));for(const dx of [-0.22,0.22])for(const z of [-0.56,0.56])holes.push([x+dx,z,0.036]);});
+  for(const x of JOURNALS)for(const z of [-0.64,0.64])holes.push([x,z,0.05]);
+  for(const x of [-1.93,1.93])holes.push([x,0.3,0.04]);
+  holes.forEach(([x,z,r])=>{deck.holes.push(circlePath(x,-z,r));g.add(mesh(cylY(r+0.004,0.004,16),M.slot,x,2.14,z));});
+  g.add(mesh(extY(deck,0.012,0,48),M.machined,0,2.138,0));
+  for(const [x,z] of [[1.75,-0.64],[-1.75,0.64]])g.add(mesh(cylY(0.03,0.05,12),M.steel,x,2.16,z));
+  for(const z of [-0.752,0.752])g.add(mesh(rbox(4.0,0.04,0.006,0.002,0.001),M.machined,0,2.13,z));
+  // cylinder barrels bulging out of both side walls
+  XS.forEach(x=>{for(const z of [-0.75,0.75]){const b=mesh(new THREE.CylinderGeometry(0.45,0.45,0.95,36,1,false,z<0?Math.PI/2:-Math.PI/2,Math.PI),M.block,x,1.5,z);b.scale.z=0.14;g.add(b);}});
+  // rear: transmission (bellhousing) flange with bolt bosses and dowels, open around the rear-seal housing
+  const tf=rrShape(1.9,2.05,0.28);tf.holes.push(rrPath(1.02,0.92,0.24,0,-0.42));
+  g.add(mesh(extX(tf,0.02,0,16),M.block,-2.01,0.42,0));
+  for(let i=0;i<7;i++){const a=-0.6+i*0.62,y=Math.cos(a)*1.0,z=Math.sin(a)*0.82;if(y<-0.5)continue;g.add(mesh(cylX(0.07,0.06,16),M.block,-2.04,y,z));g.add(mesh(cylX(0.03,0.004,10),M.slot,-2.072,y,z));}
+  for(const [y,z] of [[-0.45,0.78],[-0.45,-0.78]])g.add(mesh(cylX(0.03,0.08,10),M.steel,-2.05,y,z));
   XS.forEach(x=>g.add(mesh(new THREE.CylinderGeometry(0.397,0.397,1.2,48,1,true),M.bore,x,1.55,0)));
   const wall=new THREE.Shape();wall.moveTo(-0.85,-0.55);wall.lineTo(-0.85,0.3);wall.lineTo(-0.75,0.97);wall.lineTo(-0.6,0.97);wall.lineTo(-0.7,0.3);wall.lineTo(-0.7,-0.55);wall.lineTo(-0.85,-0.55);
   for(const e of [1,-1]){const gg=extX(wall,4.0,0,4);if(e<0)gg.scale(1,1,-1);g.add(mesh(gg,M.block));}
