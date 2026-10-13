@@ -85,6 +85,7 @@ input[type=range]{width:100%;accent-color:var(--acc);height:26px}
 .banner .bs{font-size:12.5px;color:var(--mute);font-weight:600}
 .banner.empty .bn{font-size:clamp(15px,2.8vw,19px);color:var(--mute)}
 .banner.quiz{--c:var(--hl)}
+.boost{margin-top:6px;font-size:13px;color:var(--mute)}.boost b{color:#0891b2}
 .banner .cd{position:absolute;left:0;bottom:0;height:5px;border-radius:0 0 0 12px;background:var(--c,var(--acc));width:0}
 .demoCap{margin-top:10px;padding:10px 12px 12px;border-radius:14px;background:var(--panel);border:2px solid var(--acc);box-shadow:var(--shadow)}
 .dcTop{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
@@ -370,6 +371,7 @@ $('sndBtn').textContent=MUTE?'🔇':'🔊';
 const SYS={
   top:{c:'#0d9488',n:A('ટોપ એન્ડ (હેડ)','टॉप एंड (हेड)','Top end (head)')},
   air:{c:'#0284c7',n:A('હવા / ઇન્ટેક','हवा / इनटेक','Air intake')},
+  turbo:{c:'#0891b2',n:A('ટર્બો / ઇન્ટરકૂલર','टर्बो / इंटरकूलर','Turbo & intercooler')},
   fuel:{c:'#16a34a',n:A('ફ્યુઅલ','फ्यूल','Fuel')},
   ign:{c:'#9333ea',n:A('ઇગ્નિશન','इग्निशन','Ignition')},
   exh:{c:'#ea580c',n:A('એક્ઝોસ્ટ','एग्ज़ॉस्ट','Exhaust')},
@@ -448,7 +450,7 @@ function beltTex(teeth){return canvasTex(512,32,(c,w,h)=>{c.fillStyle='#1b1c1e';
 const timingBeltTex=beltTex(true),accBeltTex=beltTex(false);
 function decal(lines,w,h){const t=canvasTex(w,h,()=>{});const draw=()=>{const c=t.image.getContext('2d');c.clearRect(0,0,w,h);lines(c,w,h);t.needsUpdate=true;};draw();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;return t;}
 const vcDecal=decal((c,w,h)=>{c.fillStyle='#e9e4d8';c.font='800 74px "Baloo Bhai 2","Arial Narrow",sans-serif';c.textBaseline='middle';c.fillText('DOHC',24,h/2);c.fillStyle='#ff8a2a';c.fillText('16V',250,h/2);c.fillStyle='#9aa0a6';c.fillRect(400,h/2-2,560,4);c.font='600 34px "JetBrains Mono",monospace';c.fillStyle='#d3cdbf';c.fillText('2.0 · 1998 cc',620,h/2-30);},1024,128);
-const coverDecal=decal((c,w,h)=>{c.fillStyle='#f1ede4';c.font='800 120px "Baloo Bhai 2","Arial Narrow",sans-serif';c.textBaseline='middle';c.textAlign='center';c.fillText('2.0',w/2-110,h/2+6);c.fillStyle='#ff8a2a';c.fillText('16V',w/2+130,h/2+6);},512,192);
+const coverDecal=decal((c,w,h)=>{c.fillStyle='#f1ede4';c.font='800 120px "Baloo Bhai 2","Arial Narrow",sans-serif';c.textBaseline='middle';c.textAlign='center';c.font='800 88px "Baloo Bhai 2","Arial Narrow",sans-serif';const a='2.0 ',b='TURBO',wa=c.measureText(a).width,wb=c.measureText(b).width,x0=w/2-(wa+wb)/2;c.textAlign='left';c.fillText(a,x0,h/2+6);c.fillStyle='#ff8a2a';c.fillText(b,x0+wa,h/2+6);},512,192);
 // raised (embossed) lettering moulded into the black cover: light top-left edge, dark bottom-right edge
 const EMB_TXT='@ashish_9978',EMB_FONT='800 150px "Baloo Bhai 2","Arial Black",sans-serif';
 const embossTex=decal((c,w,h)=>{c.font=EMB_FONT;c.textBaseline='middle';c.textAlign='center';const x=w/2,y=h/2+8;
@@ -495,6 +497,11 @@ const M={
 M.valveIn=std({color:0x2a2c2f,metalness:0.6,roughness:0.65});M.valveEx=std({color:0x121212,metalness:0.4,roughness:0.85});M.valveStem=std({color:0x45494e,metalness:0.85,roughness:0.4});
 [M.valveIn,M.valveEx,M.valveStem].forEach(m=>m.userData.noTint=true);
 M.sump=std({color:0x18191b,metalness:0.45,roughness:0.5}); /* black-painted pressed-steel sump */
+M.turbIron=std({color:0x5b524c,metalness:0.7,roughness:0.62,bumpMap:castTex,bumpScale:0.006}); /* heat-stained cast-iron turbine housing */
+M.compAlu=std({color:0xc9ccce,metalness:0.85,roughness:0.38,bumpMap:castTex,bumpScale:0.004});
+M.icFin=std({color:0xffffff,metalness:0.6,roughness:0.5,map:canvasTex(64,64,(c,w,h)=>{c.fillStyle='#2b2e33';c.fillRect(0,0,w,h);c.fillStyle='#9aa0a6';for(let y=0;y<h;y+=4)c.fillRect(0,y,w,2);},1)});
+M.icFin.map.repeat.set(1,14);
+M.siliconeBlue=std({color:0x1d4ed8,roughness:0.55});
 Object.assign(M,{
   shell:std({color:0xc8894a,metalness:0.9,roughness:0.3,side:THREE.DoubleSide}),
   gasketR:std({color:0x7a1f1f,roughness:0.7}),
@@ -553,6 +560,12 @@ const PEAK={in:450,ex:270},HALF=120;
 const JOURNALS=[-1.8875,-0.95,0,0.95,1.8875];
 const TB={crank:{y:0,z:0,r:0.2},wp:{y:1.05,z:-0.42,r:0.17},camI:{y:CAM_Y,z:-0.4,r:0.36},camE:{y:CAM_Y,z:0.4,r:0.36},ten:{y:1.45,z:0.45,r:0.12}};
 const STARTER=(()=>{const d=Math.hypot(0.29,0.957),R=1.33;return {y:-0.29/d*R,z:-0.957/d*R};})(); // pinion centre: ring-gear pitch 1.245 + pinion pitch 0.085
+function cylZ(r,len,seg){const g=new THREE.CylinderGeometry(r,r,len,seg||32);g.rotateX(Math.PI/2);return g;}
+// turbo layout: shaft along x below the exhaust collector; turbine at x=0, compressor at x=0.5
+const TURBO={x:0.25,y:0.42,z:1.42};
+const TURBO_IN_PATH=[V(-3.2,2.86,-0.1),V(-3.2,2.8,0.4),V(-3.05,2.4,1.1),V(-2.6,1.7,1.8),V(-1.6,1.15,2.1),V(0.4,1.15,2.1),V(1.05,1.05,1.9),V(1.15,0.7,1.55),V(0.95,0.45,1.42),V(0.78,0.42,1.42)];
+const HOT_PATH=[V(0.52,0.02,1.56),V(0.56,-0.2,1.72),V(0.75,-0.25,2.0),V(1.1,-0.18,2.2),V(1.33,-0.15,2.26)];
+const COLD_PATH=[V(-1.33,-0.15,2.26),V(-1.6,-0.1,2.0),V(-2.45,0.25,1.75),V(-2.8,0.95,0.95),V(-2.8,1.65,-0.4),V(-2.6,1.85,-1.2),V(-2.27,1.85,-1.35)];
 const AB={crank:{y:0,z:0,r:0.34},alt:{y:0.85,z:-1.15,r:0.13},ac:{y:-0.15,z:1.25,r:0.27},idl:{y:1.3,z:0.35,r:0.13}};
 
 /* ---------------- parts registry ---------------- */
@@ -574,15 +587,17 @@ part('engineCover',{sys:'top',dir:[0,1,0],dist:3.4,housing:true,
 });
 part('airIntake',{sys:'air',dir:[-1,0.4,-0.6],dist:2.0,
   n:A('એર ફિલ્ટર બોક્સ અને ડક્ટ','एयर फ़िल्टर बॉक्स और डक्ट','Air filter box & duct'),
-  d:A('હવામાંથી ધૂળ ગાળીને સાફ હવા થ્રોટલ બોડી સુધી મોકલે. આઉટલેટમાં MAF સેન્સર હવાનું પ્રમાણ માપે.','हवा से धूल छानकर साफ हवा थ्रॉटल बॉडी तक भेजता है. आउटलेट में MAF सेंसर हवा की मात्रा मापता है.','Filters dust out and sends clean air to the throttle body. The MAF sensor in the outlet measures airflow.'),
+  d:A('હવામાંથી ધૂળ ગાળીને સાફ હવા ડક્ટ દ્વારા ટર્બોના કમ્પ્રેસર સુધી મોકલે. આઉટલેટમાં MAF સેન્સર હવાનું પ્રમાણ માપે.','हवा से धूल छानकर साफ हवा डक्ट से टर्बो के कम्प्रेसर तक भेजता है. आउटलेट में MAF सेंसर हवा की मात्रा मापता है.','Filters dust out and sends clean air through the duct to the turbo compressor. The MAF sensor in the outlet measures airflow.'),
   m:A('PP પ્લાસ્ટિક, રબર ડક્ટ','PP प्लास्टिक, रबर डक्ट','PP plastic, rubber duct'),s:A('ફિલ્ટર એરિયા ≈ 0.25 m²','फ़िल्टर एरिया ≈ 0.25 m²','Filter area ≈ 0.25 m²'),f:A('હોઝ ક્લેમ્પ 3 N·m','होज़ क्लैम्प 3 N·m','Hose clamps 3 N·m')},g=>{
   g.add(mesh(rbox(1.0,0.32,1.25,0.06),M.plastic,-3.2,2.86,-0.8));
   g.add(mesh(rbox(1.04,0.24,1.29,0.06),M.plastic,-3.2,3.12,-0.8));
   for(let i=0;i<5;i++)g.add(mesh(rbox(0.04,0.05,1.1,0.01,0.01),M.plastic,-3.6+i*0.2,3.25,-0.8));
   for(const z of [-1.4,-0.2])for(const x of [-3.65,-2.75])g.add(mesh(rbox(0.08,0.12,0.04,0.01,0.01),M.grey,x,3.0,z));
-  g.add(tube([V(-2.1,1.85,-1.35),V(-2.45,1.92,-1.38),V(-2.75,2.2,-1.3),V(-2.95,2.6,-1.1),V(-3.0,2.72,-1.0)],0.13,M.rubber,48));
-  for(const p of [V(-2.17,1.86,-1.35),V(-2.96,2.68,-1.04)]){const c=mesh(new THREE.TorusGeometry(0.135,0.016,8,32),M.steel);c.position.copy(p);c.rotation.y=Math.PI/2;g.add(c);}
-  g.add(mesh(rbox(0.12,0.1,0.12,0.02),M.connector,-2.55,2.12,-1.55));
+  // clean-air duct: air box (+z face) → round the rear of the engine → turbo compressor inlet
+  g.add(tube(TURBO_IN_PATH,0.12,M.rubber,160,16));
+  g.add(mesh(cylZ(0.15,0.08),M.plastic,-3.2,2.86,-0.13));
+  const c1=mesh(new THREE.TorusGeometry(0.128,0.016,8,32),M.steel,0.84,0.42,1.42);c1.rotation.y=Math.PI/2;g.add(c1);
+  g.add(mesh(rbox(0.12,0.1,0.12,0.02),M.connector,-3.2,2.95,0.25));
   g.add(mesh(cylX(0.11,0.32),M.plastic,-3.82,2.9,-0.35));
   const lip=mesh(new THREE.TorusGeometry(0.11,0.018,8,28),M.plastic,-3.98,2.9,-0.35);lip.rotation.y=Math.PI/2;g.add(lip);
 });
@@ -638,8 +653,8 @@ part('exhaustManifold',{sys:'exh',dir:[0,0,1],dist:3.0,requires:['heatShield'],
   XS.forEach(x=>g.add(tube([V(x,2.47,0.8),V(x,2.45,1.05),V(x*0.85,2.1,1.3),V(x*0.45,1.45,1.35),V(x*0.12,1.05,1.3),V(0,0.95,1.3)],0.085,M.exhaust,64,16)));
   g.add(mesh(rbox(3.7,0.32,0.06,0.04),M.exhaust,0,2.48,0.845));
   XS.forEach(x=>{bolt(g,x-0.24,2.6,0.875,'z',M.brass);bolt(g,x+0.24,2.36,0.875,'z',M.brass);});
-  g.add(mesh(new THREE.CylinderGeometry(0.2,0.11,0.42,32),M.exhaust,0,0.82,1.3));
-  g.add(mesh(cylY(0.25,0.03),M.exhaust,0,0.6,1.3));g.add(between(V(0.15,0.92,1.45),V(0.32,1.1,1.68),0.035,M.steel,12));
+  g.add(between(V(0,0.99,1.3),V(0,0.8,1.36),0.1,M.exhaust,24));g.add(mesh(cylY(0.17,0.03,28),M.exhaust,0,0.81,1.36)); // flange to the turbine inlet
+  for(const a of [0.6,2.7,4.8])g.add(mesh(cylY(0.022,0.06,6),M.brass,Math.cos(a)*0.13,0.84,1.36+Math.sin(a)*0.13));
 });
 part('thermostat',{sys:'cool',dir:[-1,0.4,0.3],dist:1.3,
   n:A('થર્મોસ્ટેટ હાઉસિંગ','थर्मोस्टेट हाउसिंग','Thermostat housing'),
@@ -979,7 +994,7 @@ part('block',{sys:'block',fixed:true,housing:true,
 });
 
 /* ===== parts split out or added so every serviceable part is listed ===== */
-part('throttleBody',{sys:'air',dir:[-1,0.2,-0.3],dist:1.6,requires:['airIntake'],
+part('throttleBody',{sys:'air',dir:[-1,0.2,-0.3],dist:1.6,requires:['chargePipes'],
   n:A('થ્રોટલ બોડી','थ्रॉटल बॉडी','Throttle body'),
   d:A('અંદરનો બટરફ્લાય વાલ્વ એક્સિલરેટર પ્રમાણે ખૂલી એન્જિનમાં જતી હવા નિયંત્રિત કરે. ઉપરનો TPS (થ્રોટલ પોઝિશન સેન્સર) વાલ્વ કેટલો ખુલ્લો છે તે ECU ને કહે.','अंदर का बटरफ्लाई वाल्व एक्सीलरेटर के अनुसार खुलकर इंजन में जाने वाली हवा नियंत्रित करता है. ऊपर का TPS (थ्रॉटल पोज़िशन सेंसर) वाल्व कितना खुला है यह ECU को बताता है.','The butterfly valve inside opens with the accelerator to control the air entering the engine. The TPS on top tells the ECU how far it is open.'),
   m:A('એલ્યુમિનિયમ બોડી, ઇલેક્ટ્રિક મોટર','एल्यूमिनियम बॉडी, इलेक्ट्रिक मोटर','Aluminium body, electric motor'),s:A('બોર 60 mm','बोर 60 mm','Bore 60 mm'),f:A('4 × M6, 10 N·m','4 × M6, 10 N·m','4 × M6, 10 N·m'),
@@ -1001,15 +1016,15 @@ part('intakeGasket',{sys:'air',dir:[0,0,-1],dist:1.4,requires:['intakeManifold']
   const sh=rrShape(3.7,0.34,0.03);XS.forEach(x=>sh.holes.push(rrPath(0.6,0.28,0.04,x,0)));g.add(mesh(extZ(sh,0.012),M.fibre,0,2.48,-0.805));
 });
 part('catConverter',{sys:'exh',dir:[0,-0.3,1],dist:2.2,
-  n:A('કેટાલિટિક કન્વર્ટર અને ડાઉનપાઇપ','कैटेलिटिक कन्वर्टर और डाउनपाइप','Catalytic converter & downpipe'),
+  n:A('ટર્બો ડાઉનપાઇપ અને કેટાલિટિક કન્વર્ટર','टर्बो डाउनपाइप और कैटेलिटिक कन्वर्टर','Turbo downpipe & catalytic converter'),
   d:A('અંદરની હનીકોમ્બ પર પ્લેટિનમ-રોડિયમનું પડ હોય છે. તે ઝેરી CO, HC અને NOx ને CO₂, H₂O અને N₂ માં ફેરવે.','अंदर के हनीकॉम्ब पर प्लैटिनम-रोडियम की परत होती है. यह ज़हरीली CO, HC और NOx को CO₂, H₂O और N₂ में बदलता है.','Its honeycomb is coated with platinum and rhodium, turning toxic CO, HC and NOx into CO₂, H₂O and N₂.'),
   m:A('સ્ટેનલેસ શેલ, સિરામિક હનીકોમ્બ','स्टेनलेस शेल, सिरेमिक हनीकॉम्ब','Stainless shell, ceramic honeycomb'),s:A('3-વે કેટ, 400 °C થી ઉપર કામ કરે','3-वे कैट, 400 °C से ऊपर काम करता है','3-way cat, works above 400 °C'),f:A('M10 નટ 40 N·m','M10 नट 40 N·m','M10 nuts 40 N·m'),
   h:A('O₂ સેન્સરનું કનેક્ટર કાઢો → કાટવાળા નટ પર પેનિટ્રેટિંગ ઓઇલ → 14 mm પાનાથી ફ્લેન્જ નટ ખોલો → પાઇપ નીચે ઉતારો.','O₂ सेंसर का कनेक्टर निकालें → जंग लगे नट पर पेनिट्रेटिंग ऑयल → 14 mm पाने से फ्लैंज नट खोलें → पाइप नीचे उतारें.','Unplug the O₂ sensor → penetrating oil on the rusty nuts → undo the flange nuts with a 14 mm spanner → lower the pipe.')},g=>{
-  g.add(mesh(cylY(0.25,0.03),M.exhaust,0,0.57,1.3));
-  g.add(tube([V(0,0.57,1.3),V(0,0.25,1.3),V(-0.2,-0.18,1.28)],0.1,M.exhaust,32,16));
-  const a=V(-0.24,-0.22,1.28),b=V(-1.05,-0.66,1.23);g.add(between(a,b,0.2,M.shield,28));
-  g.add(tube([b,V(-1.5,-0.8,1.22),V(-2.62,-0.9,1.2)],0.1,M.exhaust,48,16));
-  g.add(between(V(-1.15,-0.62,1.3),V(-1.2,-0.47,1.45),0.03,M.steel,12));g.add(mesh(cylX(0.11,0.06),M.machined,-2.64,-0.9,1.2));
+  g.add(mesh(cylX(0.17,0.03,28),M.exhaust,-0.235,0.42,1.42)); // flange on the turbine outlet
+  g.add(tube([V(-0.24,0.42,1.42),V(-0.45,0.4,1.42),V(-0.6,0.12,1.38),V(-0.68,-0.28,1.31)],0.11,M.exhaust,40,16));
+  const a=V(-0.7,-0.32,1.3),b=V(-1.45,-0.72,1.25);g.add(between(a,b,0.2,M.shield,28));
+  g.add(tube([b,V(-1.9,-0.86,1.22),V(-2.62,-0.9,1.2)],0.1,M.exhaust,48,16));
+  g.add(between(V(-0.52,0.3,1.48),V(-0.55,0.4,1.66),0.03,M.steel,12));g.add(between(V(-1.55,-0.76,1.3),V(-1.6,-0.6,1.45),0.03,M.steel,12)); // O₂ sensors before and after the catg.add(mesh(cylX(0.11,0.06),M.machined,-2.64,-0.9,1.2));
 });
 part('exhaustGasket',{sys:'exh',dir:[0,0,1],dist:1.6,requires:['exhaustManifold'],
   n:A('એક્ઝોસ્ટ મેનિફોલ્ડ ગાસ્કેટ','एग्ज़ॉस्ट मैनिफोल्ड गैस्केट','Exhaust manifold gasket'),
@@ -1101,20 +1116,89 @@ part('mainBearings',{sys:'bottom',dir:[0,-1,0],dist:0.35,requires:['crankshaft']
   const upG=new THREE.CylinderGeometry(0.19,0.19,0.11,28,1,true,0,Math.PI);upG.rotateZ(Math.PI/2);JOURNALS.forEach(x=>g.add(mesh(upG,M.shell,x,0,0)));
 });
 
+/* ===== turbocharger system ===== */
+function volute(g,xc,R0,r0,mat,cy,cz){ // snail-shaped housing around the x axis, growing over ~330°
+  for(let i=0;i<11;i++){const a=i*TAU*0.92/11;const t=new THREE.TorusGeometry(R0+i*0.009,r0+i*0.0075,10,6,TAU*0.92/11+0.03);t.rotateZ(a);t.rotateY(Math.PI/2);g.add(mesh(t,mat,xc,cy,cz));}}
+part('turbo',{sys:'turbo',dir:[0.2,-0.6,1],dist:1.6,
+  n:A('ટર્બોચાર્જર','टर्बोचार्जर','Turbocharger'),
+  d:A('એક્ઝોસ્ટ ગેસ ટર્બાઇન વ્હીલ ફેરવે; એ જ શાફ્ટ પરનું કમ્પ્રેસર વ્હીલ વધુ હવા દબાવીને એન્જિનમાં ભરે (બૂસ્ટ). વેસ્ટગેટ વધારાનો ગેસ ટર્બાઇનની બહારથી વાળી બૂસ્ટ મર્યાદામાં રાખે.','एग्ज़ॉस्ट गैस टर्बाइन व्हील घुमाती है; उसी शाफ्ट पर लगा कम्प्रेसर व्हील ज़्यादा हवा दबाकर इंजन में भरता है (बूस्ट). वेस्टगेट अतिरिक्त गैस को टर्बाइन से बाहर मोड़कर बूस्ट सीमा में रखता है.','Exhaust gas spins the turbine wheel; the compressor wheel on the same shaft packs extra air into the engine (boost). The wastegate bypasses surplus gas to cap the boost.'),
+  m:A('ટર્બાઇન: કાસ્ટ આયર્ન · કમ્પ્રેસર: એલ્યુમિનિયમ · શાફ્ટ: સ્ટીલ','टर्बाइन: कास्ट आयरन · कम्प्रेसर: एल्यूमिनियम · शाफ्ट: स्टील','Turbine: cast iron · compressor: aluminium · shaft: steel'),s:A('બૂસ્ટ 0.8 bar · 1.5 લાખ rpm સુધી','बूस्ट 0.8 bar · 1.5 लाख rpm तक','0.8 bar boost · up to 150,000 rpm'),f:A('ટર્બો-મેનિફોલ્ડ નટ 25 N·m + નવું ગાસ્કેટ','टर्बो-मैनिफोल्ड नट 25 N·m + नया गैस्केट','Turbo-to-manifold nuts 25 N·m + new gasket'),
+  h:A('ડાઉનપાઇપ, ચાર્જ પાઇપ, ઓઇલ/કૂલન્ટ લાઇન પહેલાં કાઢો → 13 mm નટ પર પેનિટ્રેટિંગ ઓઇલ → ટર્બો નીચે ઉતારો. લગાવતાં પહેલાં ઓઇલ ફીડમાં ચોખ્ખું ઓઇલ ભરો (પ્રાઇમ).','डाउनपाइप, चार्ज पाइप, ऑयल/कूलेंट लाइन पहले निकालें → 13 mm नट पर पेनिट्रेटिंग ऑयल → टर्बो नीचे उतारें. लगाने से पहले ऑयल फीड में साफ ऑयल भरें (प्राइम).','Remove the downpipe, charge pipes and oil/coolant lines first → penetrating oil on the 13 mm nuts → lower the turbo. Prime the oil feed with clean oil before refitting.')},g=>{
+  const T=new THREE.Group();T.position.set(TURBO.x,TURBO.y,TURBO.z);g.add(T);
+  // turbine side (x = -0.25 local): cast-iron volute, axial outlet, inlet neck up to the manifold flange
+  volute(T,-0.25,0.17,0.06,M.turbIron,0,0);T.add(mesh(cylX(0.2,0.2,32),M.turbIron,-0.25,0,0));
+  T.add(mesh(cylX(0.13,0.16,28),M.turbIron,-0.38,0,0));T.add(mesh(cylX(0.165,0.03,28),M.turbIron,-0.47,0,0));
+  for(const a of [0.5,2.6,4.7])bolt(T,-0.49,Math.cos(a)*0.13,Math.sin(a)*0.13,'-x',M.brass);
+  T.add(mesh(new THREE.CylinderGeometry(0.1,0.12,0.2,24),M.turbIron,-0.25,0.27,-0.06));T.add(mesh(cylY(0.165,0.03,28),M.turbIron,-0.25,0.375,-0.06));
+  // centre housing (bearings): oil in on top, oil out underneath, coolant ports on the side
+  T.add(mesh(cylX(0.12,0.22,28),M.darkSteel,0,0,0));for(const dx of [-0.07,0,0.07])T.add(mesh(cylX(0.135,0.015,28),M.darkSteel,dx,0,0));
+  T.add(mesh(cylY(0.04,0.06,6),M.brass,0,0.15,0));T.add(mesh(rbox(0.1,0.04,0.1,0.01),M.darkSteel,0,-0.14,0));
+  for(const dy of [-0.04,0.04])T.add(mesh(cylZ(0.025,0.06,6),M.brass,0,dy,-0.14));
+  // compressor side (x = +0.27 local): aluminium volute, open inlet with the wheel visible, outlet neck pointing down
+  T.add(mesh(cylX(0.24,0.05,40),M.compAlu,0.135,0,0));volute(T,0.27,0.18,0.065,M.compAlu,0,0);T.add(mesh(cylX(0.21,0.18,36),M.compAlu,0.27,0,0));
+  const inl=new THREE.CylinderGeometry(0.13,0.13,0.16,32,1,true);inl.rotateZ(Math.PI/2);T.add(mesh(inl,M.compAlu,0.44,0,0));
+  const inlIn=new THREE.CylinderGeometry(0.115,0.115,0.16,32,1,true);inlIn.rotateZ(Math.PI/2);T.add(mesh(inlIn,M.portIn,0.44,0,0));
+  const rim=new THREE.Shape();rim.absarc(0,0,0.14,0,TAU,false);rim.holes.push(circlePath(0,0,0.115));T.add(mesh(extX(rim,0.02,0,32),M.compAlu,0.52,0,0));
+  T.add(mesh(new THREE.CylinderGeometry(0.075,0.085,0.2,24),M.compAlu,0.27,-0.3,0.14));T.add(mesh(new THREE.TorusGeometry(0.08,0.012,8,24).rotateX(Math.PI/2),M.compAlu,0.27,-0.38,0.14));
+  // spinning shaft: compressor wheel (visible in the inlet) + nut
+  const sh=new THREE.Group();sh.name='turboShaft';T.add(sh);
+  sh.add(mesh(new THREE.CylinderGeometry(0.025,0.06,0.12,20).rotateZ(-Math.PI/2),M.machined,0.39,0,0));
+  for(let i=0;i<8;i++){const b=mesh(rbox(0.13,0.008,0.07,0.003,0.002),M.machined,0.39,0,0);b.rotation.x=i/8*TAU;b.geometry=b.geometry.clone().translate(0,0,0.06);b.rotation.y=0.35;sh.add(b);}
+  sh.add(mesh(cylX(0.018,0.04,6),M.steel,0.46,0,0));
+  // wastegate: actuator can on the compressor side, rod to the flap lever on the turbine side
+  T.add(mesh(cylX(0.1,0.1,28),M.zinc,0.3,0.06,0.36));T.add(mesh(rbox(0.06,0.18,0.1,0.02),M.zinc,0.27,0.04,0.25));
+  T.add(tube([V(0.27,0.17,0.15),V(0.3,0.2,0.28),V(0.32,0.12,0.34)],0.012,M.rubber,12,6));
+  const wg=new THREE.Group();wg.name='wastegate';T.add(wg);wg.add(between(V(0.25,0.06,0.36),V(-0.18,0.06,0.3),0.012,M.steel,8));wg.add(mesh(rbox(0.04,0.12,0.03,0.01,0.005),M.steel,-0.19,0.02,0.28));
+},);
+part('turboLines',{sys:'turbo',dir:[0.3,0.2,1],dist:1.2,
+  n:A('ટર્બો ઓઇલ અને કૂલન્ટ લાઇન','टर्बो ऑयल और कूलेंट लाइन','Turbo oil & coolant lines'),
+  d:A('પાતળી ઓઇલ ફીડ લાઇન ટર્બોના બેરિંગને દબાણવાળું ઓઇલ આપે; જાડી રિટર્ન લાઇન ઓઇલ પાછું સમ્પમાં લાવે. બે કૂલન્ટ લાઇન ગરમ સેન્ટર હાઉસિંગ ઠંડું રાખે.','पतली ऑयल फीड लाइन टर्बो के बेयरिंग को दबाव वाला ऑयल देती है; मोटी रिटर्न लाइन ऑयल वापस संप में लाती है. दो कूलेंट लाइन गर्म सेंटर हाउसिंग ठंडा रखती हैं.','A thin feed line brings pressurised oil to the turbo bearings; a thick return line drains it back to the sump. Two coolant lines keep the hot centre housing cool.'),
+  m:A('સ્ટીલ પાઇપ, બ્રેડેડ હોઝ, બેન્જો બોલ્ટ','स्टील पाइप, ब्रेडेड होज़, बैंजो बोल्ट','Steel pipe, braided hose, banjo bolts'),s:A('ફીડ Ø 8 mm · રિટર્ન Ø 19 mm','फीड Ø 8 mm · रिटर्न Ø 19 mm','Feed Ø 8 mm · return Ø 19 mm'),f:A('બેન્જો બોલ્ટ 25 N·m + નવા તાંબાના વોશર','बैंजो बोल्ट 25 N·m + नए तांबे के वॉशर','Banjo bolts 25 N·m + new copper washers'),
+  h:A('ઓઇલ અને કૂલન્ટ ડ્રેઇન કરો → 17 mm બેન્જો બોલ્ટ ખોલો → તાંબાના વોશર ફરી ન વાપરો. ખુલ્લા છેડા ઢાંકો જેથી ધૂળ ન જાય.','ऑयल और कूलेंट ड्रेन करें → 17 mm बैंजो बोल्ट खोलें → तांबे के वॉशर दोबारा न लगाएँ. खुले सिरे ढकें ताकि धूल न जाए.','Drain oil and coolant → undo the 17 mm banjo bolts → never reuse the copper washers. Cap the open ends against dirt.')},g=>{
+  const t=(x,y,z)=>V(TURBO.x+x,TURBO.y+y,TURBO.z+z);
+  g.add(tube([t(0,0.18,0),t(0.1,0.48,-0.12),t(0.3,0.73,-0.42),t(0.37,0.78,-0.56)],0.018,M.steel,40,8));       // oil feed (from the main gallery)
+  g.add(tube([t(0,-0.16,0),t(0.02,-0.4,-0.12),t(0.05,-0.72,-0.45),t(0.05,-0.8,-0.5)],0.036,M.hose,32,10));    // oil return to the sump
+  g.add(tube([t(0,0.04,-0.17),t(0.2,0.18,-0.35),t(0.35,0.33,-0.52),t(0.45,0.33,-0.56)],0.016,M.steel,32,8));   // coolant in
+  g.add(tube([t(0,-0.04,-0.17),t(0.15,-0.2,-0.35),t(0.3,-0.27,-0.52),t(0.4,-0.27,-0.56)],0.016,M.steel,32,8)); // coolant out
+  for(const q of [t(0,0.18,0),t(0.37,0.78,-0.56),t(0.45,0.33,-0.56),t(0.4,-0.27,-0.56)])g.add(mesh(new THREE.SphereGeometry(0.035,12,8),M.brass,q.x,q.y,q.z));
+});
+part('chargePipes',{sys:'turbo',dir:[0,0.2,1],dist:1.8,requires:['engineCover'],
+  n:A('ચાર્જ-એર પાઇપ (ટર્બો → ઇન્ટરકૂલર → થ્રોટલ)','चार्ज-एयर पाइप (टर्बो → इंटरकूलर → थ्रॉटल)','Charge-air pipes (turbo → intercooler → throttle)'),
+  d:A('હોટ પાઇપ: ટર્બોમાંથી ગરમ દબાયેલી હવા ઇન્ટરકૂલર સુધી. કોલ્ડ પાઇપ: ઠંડી થયેલી હવા થ્રોટલ બોડી સુધી. જોડાણ પર સિલિકોન કપલર અને ક્લેમ્પ.','हॉट पाइप: टर्बो से गर्म दबी हवा इंटरकूलर तक. कोल्ड पाइप: ठंडी हुई हवा थ्रॉटल बॉडी तक. जोड़ों पर सिलिकॉन कपलर और क्लैम्प.','Hot pipe: hot compressed air from the turbo to the intercooler. Cold pipe: cooled air on to the throttle body. Silicone couplers and clamps at the joints.'),
+  m:A('એલ્યુમિનિયમ પાઇપ, સિલિકોન કપલર','एल्यूमिनियम पाइप, सिलिकॉन कपलर','Aluminium pipes, silicone couplers'),s:A('Ø 55 mm, 1.8 bar (abs) સુધી','Ø 55 mm, 1.8 bar (abs) तक','Ø 55 mm, up to 1.8 bar (abs)'),f:A('T-બોલ્ટ ક્લેમ્પ 6 N·m','T-बोल्ट क्लैम्प 6 N·m','T-bolt clamps 6 N·m'),
+  h:A('દરેક સિલિકોન કપલરનો ક્લેમ્પ 8 mm સોકેટથી ઢીલો કરો → પાઇપ ફેરવીને ખેંચો. ઓઇલનો પાતળો પડ સામાન્ય છે; વધુ ઓઇલ હોય તો ટર્બો સીલ તપાસો.','हर सिलिकॉन कपलर का क्लैम्प 8 mm सॉकेट से ढीला करें → पाइप घुमाकर खींचें. ऑयल की पतली परत सामान्य है; ज़्यादा ऑयल हो तो टर्बो सील जाँचें.','Loosen each coupler clamp with an 8 mm socket → twist and pull the pipe. A light oil film is normal; lots of oil means worn turbo seals.')},g=>{
+  g.add(tube(HOT_PATH,0.085,M.alu,64,14));g.add(tube(COLD_PATH,0.1,M.alu,96,16));
+  // silicone couplers + clamps at each joint
+  for(const [a,b] of [[HOT_PATH[0],HOT_PATH[1]],[HOT_PATH[4],HOT_PATH[3]],[COLD_PATH[0],COLD_PATH[1]],[COLD_PATH[6],COLD_PATH[5]]]){
+    const d=b.clone().sub(a).normalize(),c=a.clone().addScaledVector(d,0.09);g.add(between(a,c.clone().addScaledVector(d,0.07),0.105,M.siliconeBlue,20));
+    const t=new THREE.Mesh(new THREE.TorusGeometry(0.108,0.014,8,24),M.steel);t.position.copy(c);t.quaternion.setFromUnitVectors(V(0,0,1),d);g.add(t);}
+});
+part('intercooler',{sys:'turbo',dir:[0,0,1],dist:1.4,requires:['chargePipes'],
+  n:A('ઇન્ટરકૂલર','इंटरकूलर','Intercooler'),
+  d:A('ટર્બો હવા દબાવે ત્યારે તે ગરમ થાય (≈ 120 °C). ઇન્ટરકૂલર (હવા-થી-હવા રેડિએટર) તેને ≈ 45 °C સુધી ઠંડી કરે — ઠંડી હવા ઘટ્ટ હોય, વધુ ઓક્સિજન, વધુ પાવર અને નોકિંગ ઓછું.','टर्बो हवा दबाता है तो वह गर्म होती है (≈ 120 °C). इंटरकूलर (हवा-से-हवा रेडिएटर) उसे ≈ 45 °C तक ठंडा करता है — ठंडी हवा घनी होती है, ज़्यादा ऑक्सीजन, ज़्यादा पावर और नॉकिंग कम.','Compressing air heats it (≈ 120 °C). The intercooler, an air-to-air radiator, cools it to ≈ 45 °C — cool air is denser: more oxygen, more power, less knock.'),
+  m:A('એલ્યુમિનિયમ કોર અને ટેન્ક','एल्यूमिनियम कोर और टैंक','Aluminium core and end tanks'),s:A('ફ્રન્ટ-માઉન્ટ, ≈ 75 °C ઠંડક','फ्रंट-माउंट, ≈ 75 °C ठंडक','Front-mount, ≈ 75 °C drop'),f:A('M6 માઉન્ટ બોલ્ટ 8 N·m','M6 माउंट बोल्ट 8 N·m','M6 mount bolts 8 N·m'),
+  h:A('ચાર્જ પાઇપ કાઢ્યા પછી 2 માઉન્ટ બોલ્ટ ખોલો → સીધું આગળ ખેંચો. ફિન વાળી ન જાય તેનું ધ્યાન રાખો.','चार्ज पाइप निकालने के बाद 2 माउंट बोल्ट खोलें → सीधा आगे खींचें. फिन मुड़ न जाएँ इसका ध्यान रखें.','After the charge pipes, undo the 2 mount bolts → pull it straight forward. Don\'t bend the fins.')},g=>{
+  g.add(mesh(rbox(2.5,0.8,0.16,0.02,0.01),M.icFin,0,-0.15,2.4));
+  for(const e of [-1,1]){g.add(mesh(rbox(0.18,0.9,0.22,0.06),M.compAlu,e*1.33,-0.15,2.4));g.add(mesh(cylZ(0.085,0.16,24),M.compAlu,e*1.33,-0.15,2.26));
+    g.add(mesh(rbox(0.06,0.1,0.18,0.02),M.alu,e*1.33,0.32,2.4));bolt(g,e*1.33,0.38,2.4,'y');}
+  for(const y of [-0.56,0.26])g.add(mesh(rbox(2.5,0.03,0.17,0.01,0.006),M.alu,0,y,2.4));
+});
+
 /* final dismantling order, stages, dependencies and how-to text */
-const FINAL=['engineCover','airIntake','throttleBody','coils','sparkPlugs','fuelRail','intakeManifold','intakeGasket',
- 'heatShield','catConverter','exhaustManifold','exhaustGasket','ectSensor','thermostat','dipstick','oilFilter','oilPressureSwitch','knockSensor','accBelt','alternator','acCompressor','starter','ckpSensor',
+const FINAL=['engineCover','airIntake','chargePipes','intercooler','throttleBody','coils','sparkPlugs','fuelRail','intakeManifold','intakeGasket',
+ 'heatShield','catConverter','turboLines','turbo','exhaustManifold','exhaustGasket','ectSensor','thermostat','dipstick','oilFilter','oilPressureSwitch','knockSensor','accBelt','alternator','acCompressor','starter','ckpSensor',
  'crankPulley','timingCover','timingBelt','camSprockets','crankSprocket','waterPump',
  'valveCover','valveCoverGasket','cmpSensor','camshafts','head','valvetrain','headGasket',
  'oilPan','oilPanGasket','oilPickup','oilPump','piston1','piston2','piston3','piston4','flywheel','rearSeal','mainCaps','crankshaft','mainBearings','block'];
 if(FINAL.length!==ORDER.length||ORDER.some(id=>FINAL.indexOf(id)<0))console.error('FINAL order mismatch');
 ORDER.sort((a,b)=>FINAL.indexOf(a)-FINAL.indexOf(b));
-const REQ={intakeManifold:['fuelRail','throttleBody'],exhaustManifold:['heatShield','catConverter'],thermostat:['ectSensor'],
+const REQ={intakeManifold:['fuelRail','throttleBody'],exhaustManifold:['heatShield','catConverter','turbo'],
+  turbo:['airIntake','chargePipes','catConverter','turboLines'],turboLines:['heatShield'],throttleBody:['chargePipes'],thermostat:['ectSensor'],
   head:['camshafts','intakeManifold','exhaustManifold','thermostat','sparkPlugs','timingBelt','cmpSensor'],valvetrain:['head'],
   flywheel:['starter','ckpSensor'],crankshaft:['mainCaps','flywheel','rearSeal','oilPump','crankSprocket','timingBelt','crankPulley']};
 Object.keys(REQ).forEach(id=>{P[id].requires=REQ[id];});
-P.valvetrain.parent='head';['intakeManifold','throttleBody','exhaustManifold','heatShield','intakeGasket','exhaustGasket'].forEach(id=>P[id].xsee=true);
-P.alternator.noTint=P.starter.noTint=P.waterPump.noTint=P.acCompressor.noTint=P.engineCover.noTint=P.head.noTint=P.block.noTint=P.oilPan.noTint=true; // instantly recognisable in their real colours
+P.valvetrain.parent='head';['intakeManifold','throttleBody','exhaustManifold','heatShield','intakeGasket','exhaustGasket','airIntake','chargePipes','intercooler'].forEach(id=>P[id].xsee=true);
+P.turbo.noTint=P.intercooler.noTint=P.alternator.noTint=P.starter.noTint=P.waterPump.noTint=P.acCompressor.noTint=P.engineCover.noTint=P.head.noTint=P.block.noTint=P.oilPan.noTint=true; // instantly recognisable in their real colours
 P.head.bench=V(4.4,-4.17,1.4); // removed head goes to the bench with its valves still in it
 const HOW={
  engineCover:A('હાથથી ઉપર ખેંચો — રબર ગ્રોમેટમાંથી છૂટું પડશે. કોઈ સાધન નહીં.','हाथ से ऊपर खींचें — रबर ग्रोमेट से छूट जाएगा. कोई औज़ार नहीं.','Pull straight up by hand — it pops off the rubber grommets. No tools.'),
@@ -1188,16 +1272,19 @@ const sprays=XS.map(x=>{const m=new THREE.Mesh(sprayG,new THREE.MeshBasicMateria
 const VC=0.8/9.5,V1=VC+0.8;
 function sFromC(c){const al=c*Math.PI/180;const yc=CR*Math.cos(al),zc=CR*Math.sin(al);return (CR+ROD)-(yc+Math.sqrt(ROD*ROD-zc*zc));}
 const S12=sFromC(12);
-function gasState(c){const v=VC+sFromC(c);let p,T;
+function boostBar(){if(!state.running||state.crankT>0)return 0;return Math.max(0,Math.min(0.8,(state.rpm-120)/480*0.8));} // gauge boost; wastegate opens at 0.8
+function gasState(c){const v=VC+sFromC(c);let p,T;const B=boostBar(),k=1+B*0.8;
   if(c<180){if(c<12){p=21+39*c/12;T=480+1820*c/12;}else{p=60*Math.pow((VC+S12)/v,1.3);T=2573*Math.pow((VC+S12)/v,0.3)-273;}
-    if(c>=140){const f=(c-140)/40;p=p+(1.2-p)*f;T=T+(850-T)*f;}}
-  else if(c<360){p=1.15;T=850-220*(c-180)/180;}
-  else if(c<540){p=0.9;T=40+15*(1-(c-360)/180);}
-  else{p=0.95*Math.pow(V1/v,1.32);T=313*Math.pow(V1/v,0.32)-273;if(c>=705){const f=(c-705)/15;T+=90*f;}}
+    p*=k;if(c>=140){const f=(c-140)/40;p=p+(1.2+B*0.9-p)*f;T=T+(850-T)*f;}}
+  else if(c<360){p=1.15+B*0.9;T=850-220*(c-180)/180;}
+  else if(c<540){p=B>0.05?1.0+B:0.9;T=40+15*(1-(c-360)/180)+B*6;}
+  else{p=(B>0.05?1.0+B:0.95)*Math.pow(V1/v,1.32);T=313*Math.pow(V1/v,0.32)-273;if(c>=705){const f=(c-705)/15;T+=90*f;}}
   return {p,T,st:Math.floor(c/180)};}
 /* flow particles */
-const airCurves=XS.map(x=>new THREE.CatmullRomCurve3([V(-4.9,3.25,-0.25),V(-4.35,3.0,-0.32),V(-3.95,2.9,-0.35),V(-3.4,2.86,-0.6),V(-3.0,2.72,-1.0),V(-2.75,2.2,-1.3),V(-2.45,1.92,-1.38),V(-2.1,1.85,-1.35),V(-1.6,1.85,-1.35),V(x,1.9,-1.42),V(x,2.45,-1.6),V(x,2.95,-1.47),V(x,2.88,-1.12),V(x,2.53,-0.97),V(x,2.45,-0.8),V(x,2.3,-0.45),V(x,1.95,-0.2)],false,'centripetal'));
-const exhCurves=XS.map(x=>new THREE.CatmullRomCurve3([V(x,1.95,0.18),V(x,2.3,0.42),V(x,2.47,0.8),V(x,2.45,1.05),V(x*0.85,2.1,1.3),V(x*0.45,1.45,1.35),V(x*0.12,1.05,1.3),V(0,0.75,1.3),V(0,0.15,1.3),V(-0.5,-0.45,1.26),V(-1.5,-0.8,1.22),V(-2.62,-0.9,1.2)],false,'centripetal'));
+const AIR_PRE=[V(-4.9,3.25,-0.25),V(-4.35,3.0,-0.32),V(-3.95,2.9,-0.35),V(-3.4,2.86,-0.5)].concat(TURBO_IN_PATH,[V(0.55,0.42,1.42),V(0.52,0.2,1.5)],HOT_PATH,[V(0,-0.15,2.4)],COLD_PATH);
+const AIR_KNOTS={comp:4+TURBO_IN_PATH.length+1,ic:4+TURBO_IN_PATH.length+2+HOT_PATH.length};
+const airCurves=XS.map(x=>new THREE.CatmullRomCurve3(AIR_PRE.concat([V(-2.1,1.85,-1.35),V(-1.6,1.85,-1.35),V(x,1.9,-1.42),V(x,2.45,-1.6),V(x,2.95,-1.47),V(x,2.88,-1.12),V(x,2.53,-0.97),V(x,2.45,-0.8),V(x,2.3,-0.45),V(x,1.95,-0.2)]),false,'centripetal'));
+const exhCurves=XS.map(x=>new THREE.CatmullRomCurve3([V(x,1.95,0.18),V(x,2.3,0.42),V(x,2.47,0.8),V(x,2.45,1.05),V(x*0.85,2.1,1.3),V(x*0.45,1.45,1.35),V(x*0.12,1.05,1.3),V(0,0.85,1.36),V(0,0.62,1.42),V(-0.05,0.42,1.42),V(-0.3,0.42,1.42),V(-0.6,0.12,1.38),V(-0.7,-0.32,1.3),V(-1.45,-0.72,1.25),V(-2.62,-0.9,1.2)],false,'centripetal'));
 const dummy=new THREE.Object3D(),tmpCol=new THREE.Color();
 function makeFlow(n,size){const im=new THREE.InstancedMesh(new THREE.SphereGeometry(size,8,6),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,depthTest:false,depthWrite:false}),n);
   im.renderOrder=20;im.frustumCulled=false;fxRoot.add(im);const ps=[];for(let i=0;i<n;i++){ps.push({u:Math.random(),k:i%4,j:V((Math.random()-.5)*.09,(Math.random()-.5)*.09,(Math.random()-.5)*.09)});im.setColorAt(i,tmpCol.set(0xffffff));}return {im,ps};}
@@ -1294,7 +1381,8 @@ function updateMechanics(){
   valves.forEach(v=>{const l=VLIFT*bump(cycleAngle(v.k,th),PEAK[v.kind]);v.g.position.y=2.2-l;v.spring.scale.y=(0.3-l)/0.3;});
   const spin=(id,name,ratio)=>{const o=P[id].group.getObjectByName(name);if(o)o.rotation.x=a*ratio;};
   spin('crankPulley','spin',1);spin('flywheel','spin',1);spin('crankSprocket','spin',1);spin('camSprockets','spr0',0.5);spin('camSprockets','spr1',0.5);
-  spin('waterPump','wpSpr',TB.crank.r/TB.wp.r);spin('timingBelt','tensioner',-TB.crank.r/TB.ten.r);
+  spin('waterPump','wpSpr',TB.crank.r/TB.wp.r);spin('turbo','turboShaft',14);
+  const wgo=P.turbo.group.getObjectByName('wastegate');if(wgo){const B=boostBar();wgo.position.x+=((B>=0.78?-0.04:0)-wgo.position.x)*0.1;}spin('timingBelt','tensioner',-TB.crank.r/TB.ten.r);
   spin('alternator','altPulley',AB.crank.r/AB.alt.r);spin('acCompressor','acPulley',AB.crank.r/AB.ac.r);spin('accBelt','idler',-AB.crank.r/AB.idl.r);
   timingBeltTex.offset.x=a*TB.crank.r/1.6;accBeltTex.offset.x=a*AB.crank.r/1.4;
   const bfl=P.throttleBody.group.getObjectByName('butterfly');if(bfl){const tgt=state.running&&state.crankT<=0?Math.min(1.3,0.15+state.rpm/900*1.15):0.12;bfl.userData.open=(bfl.userData.open||0.12)+(tgt-(bfl.userData.open||0.12))*0.08;bfl.rotation.z=Math.PI/2-bfl.userData.open;}
@@ -1363,7 +1451,11 @@ function flowPipe(curve,r){const len=curve.getLength();const t=chevTex();t.repea
   const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,vertexColors:true,transparent:true,opacity:0.95,depthWrite:false,toneMapped:false}));m.renderOrder=19;m.visible=false;fxRoot.add(m);return {m,t,len};}
 function paintPipe(fp,cA,cB,k2){const col=fp.m.geometry.attributes.color,uv=fp.m.geometry.attributes.uv;for(let i=0;i<col.count;i++){tmpCol.copy(cA).lerp(cB,Math.min(1,uv.getX(i)*k2));col.setXYZ(i,tmpCol.r,tmpCol.g,tmpCol.b);}col.needsUpdate=true;}
 const IN_COL=new THREE.Color(0x7dd3fc).convertSRGBToLinear();
-const airPipes=airCurves.map(cv=>{const fp=flowPipe(cv,0.1);paintPipe(fp,IN_COL,IN_COL,1);return fp;});
+const HOT_COL=new THREE.Color(0xf97316).convertSRGBToLinear();
+function paintAir(fp,cv){const n=cv.points.length,L=cv.getLengths(n*24),uk=k=>L[Math.round(k/(n-1)*n*24)]/L[n*24];
+  const u0=uk(AIR_KNOTS.comp),u1=uk(AIR_KNOTS.ic-2),u2=uk(AIR_KNOTS.ic+1);const col=fp.m.geometry.attributes.color,uv=fp.m.geometry.attributes.uv;
+  for(let i=0;i<col.count;i++){const u=uv.getX(i);if(u<u0)tmpCol.copy(IN_COL);else if(u<u1)tmpCol.copy(IN_COL).lerp(HOT_COL,Math.min(1,(u-u0)/0.02));else tmpCol.copy(HOT_COL).lerp(IN_COL,Math.min(1,(u-u1)/Math.max(0.001,u2-u1)));col.setXYZ(i,tmpCol.r,tmpCol.g,tmpCol.b);}col.needsUpdate=true;}
+const airPipes=airCurves.map(cv=>{const fp=flowPipe(cv,0.1);paintAir(fp,cv);return fp;});
 const exhCol=()=>new THREE.Color(state.smoke==='white'?0x9ca3af:state.smoke==='blue'?0x1e3a8a:0x111111).convertSRGBToLinear();
 const exhPipes=exhCurves.map(cv=>flowPipe(cv,0.085));let paintedSmoke=null;
 function updateFlows(dDeg,dt,moving){
@@ -1421,7 +1513,7 @@ function undo(){for(let i=state.stack.length-1;i>=0;i--){if(installPart(state.st
 /* ---------------- UI text ---------------- */
 const UI={
   h1:A('એન્જિન ડિસમેન્ટલિંગ લેબ','इंजन डिसमेंटलिंग लैब','Engine Dismantling Lab'),
-  sub:A('4-સિલિન્ડર પેટ્રોલ એન્જિન · 2.0 L DOHC 16V — ભાગ ખોલો, અંદર જુઓ, ચલાવો','4-सिलेंडर पेट्रोल इंजन · 2.0 L DOHC 16V — भाग खोलें, अंदर देखें, चलाएँ','4-cylinder petrol engine · 2.0 L DOHC 16V — strip it, look inside, run it'),
+  sub:A('4-સિલિન્ડર ટર્બો પેટ્રોલ એન્જિન · 2.0 L DOHC 16V Turbo — ભાગ ખોલો, અંદર જુઓ, ચલાવો','4-सिलेंडर टर्बो पेट्रोल इंजन · 2.0 L DOHC 16V Turbo — भाग खोलें, अंदर देखें, चलाएँ','4-cylinder turbo petrol engine · 2.0 L DOHC 16V Turbo — strip it, look inside, run it'),
   tSim:A('સિમ્યુલેટર','सिम्युलेटर','Simulator'),tTh:A('થિયરી','थ्योरी','Theory'),
   cStep:A('🔧 ખોલવાનો ક્રમ','🔧 खोलने का क्रम','🔧 Dismantling order'),nextLbl:A('હવે પછીનું પગલું','अगला कदम','Next step'),
   cRun:A('⚙️ ચલાવો અને જુઓ','⚙️ चलाएँ और देखें','⚙️ Run & watch'),speed:A('ઝડપ','गति','Speed'),explode:A('છૂટું દૃશ્ય','अलग दृश्य','Exploded'),byHand:A('હાથથી ફેરવો','हाथ से घुमाएँ','Turn by hand'),
@@ -1587,7 +1679,9 @@ const cylEls=[0,1,2,3].map(i=>$('c'+i));
 function updateCycleUI(force){const th=state.theta;cylEls.forEach((el,k)=>{const c=cycleAngle(k,th);const s=STROKE[Math.floor(c/180)];const sp=el.querySelector('span');const t=L3(s[0]);if(force||sp.textContent!==t){sp.textContent=t;el.style.setProperty('--c',s[1]);}
     const g=gasState(c);const ev=(c>=702||c<6)?'⚡ '+tx('સ્પાર્ક','स्पार्क','Spark'):(c>=365&&c<445)?'💧 '+tx('ઇન્જેક્શન','इंजेक्शन','Injection'):(c<180&&c>=6)?'🔥 '+tx('દહન','दहन','Burning'):'';
     el.querySelector('.ev').textContent=ev;el.querySelector('.pt').innerHTML=(g.p<10?g.p.toFixed(1):Math.round(g.p))+' bar<br>'+Math.round(g.T)+' °C';el.querySelector('.pbar i').style.width=Math.min(100,g.p/60*100)+'%';});
-  $('crankOut').textContent=Math.round(th)+'°';if(state.running)$('crank').value=Math.round(th);}
+  $('crankOut').textContent=Math.round(th)+'°';if(state.running)$('crank').value=Math.round(th);
+  let bo=$('boostOut');if(!bo){$('cycLeg').insertAdjacentHTML('afterend','<div id="boostOut" class="boost"></div>');bo=$('boostOut');}
+  const B=boostBar();const bt='🌀 '+tx('ટર્બો બૂસ્ટ','टर्बो बूस्ट','Turbo boost')+': <b>+'+B.toFixed(1)+' bar</b>'+(B>=0.78?' · '+tx('વેસ્ટગેટ ખુલ્લો','वेस्टगेट खुला','wastegate open'):B<0.05?' · '+tx('ધીમી ઝડપે બૂસ્ટ નહીં','धीमी गति पर बूस्ट नहीं','no boost at low speed'):'');if(bo.innerHTML!==bt)bo.innerHTML=bt;}
 
 /* ---------------- name-the-part game ---------------- */
 const G={on:false,score:0,tries:0,streak:0,answered:false,opts:[]};
@@ -1624,7 +1718,7 @@ function renderTheory(){
   sec(1,tx('એન્જિન એટલે શું?','इंजन क्या है?','What is an engine?'),
     '<p>'+tx('એન્જિન <b>ઇંધણની ગરમી ઊર્જાને યાંત્રિક ઊર્જા (કામ)</b>માં ફેરવે છે. ઇંધણ સિલિન્ડરની અંદર બળે છે, એટલે તેને <b>IC એન્જિન (આંતરિક દહન)</b> કહે છે.','इंजन <b>ईंधन की ऊष्मा ऊर्जा को यांत्रिक ऊर्जा (काम)</b> में बदलता है. ईंधन सिलेंडर के अंदर जलता है, इसलिए इसे <b>IC इंजन (आंतरिक दहन)</b> कहते हैं.','An engine turns the <b>heat energy of fuel into mechanical work</b>. The fuel burns inside the cylinder, so it is an <b>IC (internal combustion) engine</b>.')+'</p>'+
     '<div class="two"><div class="tb" style="--c:#ea580c"><b>⛽ '+tx('પેટ્રોલ (SI) એન્જિન','पेट्रोल (SI) इंजन','Petrol (SI) engine')+'</b><br>'+tx('સ્પાર્ક પ્લગથી સળગે · કમ્પ્રેશન રેશિયો 8–12 · આ સિમ્યુલેટરનું એન્જિન','स्पार्क प्लग से जलता है · कम्प्रेशन रेशियो 8–12 · इस सिम्युलेटर का इंजन','Ignited by spark plug · CR 8–12 · the engine in this simulator')+'</div><div class="tb" style="--c:#2563eb"><b>🛢 '+tx('ડીઝલ (CI) એન્જિન','डीज़ल (CI) इंजन','Diesel (CI) engine')+'</b><br>'+tx('દબાયેલી ગરમ હવાથી જાતે સળગે · કમ્પ્રેશન રેશિયો 15–22 · સ્પાર્ક પ્લગ નહીં, ઇન્જેક્ટર','दबी गर्म हवा से खुद जलता है · कम्प्रेशन रेशियो 15–22 · स्पार्क प्लग नहीं, इंजेक्टर','Self-ignites in hot compressed air · CR 15–22 · no spark plug, injector instead')+'</div></div>'+
-    '<div class="tbl"><table><tr><th>'+tx('આ એન્જિન','यह इंजन','This engine')+'</th><th>'+tx('માપ','माप','Value')+'</th></tr><tr><td>'+tx('સિલિન્ડર','सिलेंडर','Cylinders')+'</td><td>4 '+tx('સીધી લાઇનમાં (ઇનલાઇન)','सीधी लाइन में (इनलाइन)','in a line (inline)')+'</td></tr><tr><td>'+tx('બોર × સ્ટ્રોક','बोर × स्ट्रोक','Bore × stroke')+'</td><td>86 × 86 mm</td></tr><tr><td>'+tx('ક્ષમતા','क्षमता','Capacity')+'</td><td>1998 cc (2.0 L)</td></tr><tr><td>'+tx('વાલ્વ','वाल्व','Valves')+'</td><td>DOHC 16V</td></tr><tr><td>'+tx('ફાયરિંગ ઓર્ડર','फायरिंग ऑर्डर','Firing order')+'</td><td>1-3-4-2</td></tr></table></div>')+
+    '<div class="tbl"><table><tr><th>'+tx('આ એન્જિન','यह इंजन','This engine')+'</th><th>'+tx('માપ','माप','Value')+'</th></tr><tr><td>'+tx('સિલિન્ડર','सिलेंडर','Cylinders')+'</td><td>4 '+tx('સીધી લાઇનમાં (ઇનલાઇન)','सीधी लाइन में (इनलाइन)','in a line (inline)')+'</td></tr><tr><td>'+tx('બોર × સ્ટ્રોક','बोर × स्ट्रोक','Bore × stroke')+'</td><td>86 × 86 mm</td></tr><tr><td>'+tx('ક્ષમતા','क्षमता','Capacity')+'</td><td>1998 cc (2.0 L)</td></tr><tr><td>'+tx('વાલ્વ','वाल्व','Valves')+'</td><td>DOHC 16V</td></tr><tr><td>'+tx('ફાયરિંગ ઓર્ડર','फायरिंग ऑर्डर','Firing order')+'</td><td>1-3-4-2</td></tr><tr><td>'+tx('હવા ભરવાની રીત','हवा भरने का तरीका','Aspiration')+'</td><td>'+tx('ટર્બોચાર્જર + ઇન્ટરકૂલર, બૂસ્ટ 0.8 bar','टर्बोचार्जर + इंटरकूलर, बूस्ट 0.8 bar','Turbocharger + intercooler, 0.8 bar boost')+'</td></tr></table></div>')+
   sec(2,tx('મહત્વના શબ્દો અને સૂત્ર','महत्वपूर्ण शब्द और सूत्र','Key terms & formulas'),
     '<ul><li><b>'+tx('બોર (D)','बोर (D)','Bore (D)')+'</b> — '+tx('સિલિન્ડરનો અંદરનો વ્યાસ','सिलेंडर का अंदरूनी व्यास','inside diameter of the cylinder')+'</li><li><b>'+tx('સ્ટ્રોક (L)','स्ट्रोक (L)','Stroke (L)')+'</b> — '+tx('TDC અને BDC વચ્ચેનું અંતર (= 2 × ક્રેન્ક ત્રિજ્યા)','TDC और BDC के बीच की दूरी (= 2 × क्रैंक त्रिज्या)','distance between TDC and BDC (= 2 × crank radius)')+'</li><li><b>TDC / BDC</b> — '+tx('પિસ્ટનનું સૌથી ઉપરનું / સૌથી નીચેનું સ્થાન','पिस्टन की सबसे ऊपरी / सबसे निचली स्थिति','top / bottom dead centre of the piston')+'</li><li><b>'+tx('સ્વેપ્ટ વોલ્યુમ (Vs)','स्वेप्ट वॉल्यूम (Vs)','Swept volume (Vs)')+'</b> — '+tx('એક સ્ટ્રોકમાં પિસ્ટન જેટલું વોલ્યુમ ખાલી કરે','एक स्ट्रोक में पिस्टन जितना आयतन खाली करता है','volume the piston sweeps in one stroke')+'</li><li><b>'+tx('ક્લિયરન્સ વોલ્યુમ (Vc)','क्लीयरेंस वॉल्यूम (Vc)','Clearance volume (Vc)')+'</b> — '+tx('TDC પર પિસ્ટન ઉપર બાકી રહેતી જગ્યા','TDC पर पिस्टन के ऊपर बची जगह','space left above the piston at TDC')+'</li></ul>'+
     '<div class="formula">Vs = π/4 × D² × L<br>CR = (Vs + Vc) ÷ Vc<br>'+tx('કુલ ક્ષમતા','कुल क्षमता','Total capacity')+' = Vs × '+tx('સિલિન્ડર સંખ્યા','सिलेंडर संख्या','no. of cylinders')+'</div>'+
@@ -1661,7 +1755,16 @@ function renderTheory(){
       ['O₂',A('એક્ઝોસ્ટમાં બાકી ઓક્સિજન','एग्ज़ॉस्ट में बचा ऑक्सीजन','Oxygen left in the exhaust'),A('માઇલેજ ઓછું, કાળો ધુમાડો','माइलेज कम, काला धुआँ','Poor mileage, black smoke')],
       [tx('ઓઇલ પ્રેશર સ્વિચ','ऑयल प्रेशर स्विच','Oil pressure switch'),A('ઓઇલ દબાણ ઓછું તો લાઇટ','ऑयल दबाव कम हो तो लाइट','Lights the lamp on low pressure'),A('ચેતવણી ન મળે — એન્જિન સીઝ થઈ શકે','चेतावनी न मिले — इंजन सीज़ हो सकता है','No warning — engine can seize')]
     ].map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+L3(r[1])+'</td><td>'+L3(r[2])+'</td></tr>').join('')+'</table></div>')+
-  sec(10,tx('ધુમાડાનો રંગ શું કહે છે?','धुएँ का रंग क्या बताता है?','What does the smoke colour tell you?'),
+  sec(10,tx('ટર્બોચાર્જર અને ઇન્ટરકૂલર','टर्बोचार्जर और इंटरकूलर','Turbocharger & intercooler'),
+    '<p>'+tx('સામાન્ય (નેચરલી એસ્પિરેટેડ) એન્જિન હવા જાતે ખેંચે છે, એટલે સિલિન્ડરમાં વાતાવરણ કરતાં ઓછું દબાણ (≈ 0.9 bar) રહે. <b>ટર્બોચાર્જર</b> હવાને દબાવીને (≈ 1.8 bar) ભરે — એટલે એ જ 2.0 L એન્જિનમાં વધુ હવા + વધુ ફ્યુઅલ = <b>≈ 40–60% વધુ પાવર</b>.','सामान्य (नेचुरली एस्पिरेटेड) इंजन हवा खुद खींचता है, इसलिए सिलेंडर में वायुमंडल से कम दबाव (≈ 0.9 bar) रहता है. <b>टर्बोचार्जर</b> हवा को दबाकर (≈ 1.8 bar) भरता है — यानी उसी 2.0 L इंजन में ज़्यादा हवा + ज़्यादा फ्यूल = <b>≈ 40–60% ज़्यादा पावर</b>.','A naturally aspirated engine sucks air in, so the cylinder fills below atmospheric pressure (≈ 0.9 bar). A <b>turbocharger</b> pushes air in under pressure (≈ 1.8 bar) — the same 2.0 L engine burns more air and fuel and makes <b>≈ 40–60% more power</b>.')+'</p>'+
+    '<div class="tb" style="--c:#0891b2"><b>🌀 '+tx('હવાનો રસ્તો','हवा का रास्ता','Air path')+'</b><br>'+tx('એર ફિલ્ટર → ટર્બો કમ્પ્રેસર (હવા દબાય અને ગરમ થાય ≈ 120 °C) → ઇન્ટરકૂલર (ઠંડી ≈ 45 °C) → થ્રોટલ બોડી → ઇનટેક મેનીફોલ્ડ → સિલિન્ડર','एयर फ़िल्टर → टर्बो कम्प्रेसर (हवा दबती और गर्म होती ≈ 120 °C) → इंटरकूलर (ठंडी ≈ 45 °C) → थ्रॉटल बॉडी → इनटेक मैनिफोल्ड → सिलेंडर','Air filter → turbo compressor (air squeezed and heated to ≈ 120 °C) → intercooler (cooled to ≈ 45 °C) → throttle body → intake manifold → cylinder')+'</div>'+
+    '<div class="tb" style="--c:#ea580c"><b>🔥 '+tx('એક્ઝોસ્ટનો રસ્તો','एग्ज़ॉस्ट का रास्ता','Exhaust path')+'</b><br>'+tx('સિલિન્ડર → એક્ઝોસ્ટ મેનીફોલ્ડ → ટર્બાઇન (ગેસની ગરમી અને દબાણથી ટર્બાઇન વ્હીલ ફરે) → ડાઉનપાઇપ → કેટાલિટિક કન્વર્ટર → સાઇલેન્સર','सिलेंडर → एग्ज़ॉस्ट मैनिफोल्ड → टर्बाइन (गैस की गर्मी और दबाव से टर्बाइन व्हील घूमता है) → डाउनपाइप → कैटेलिटिक कन्वर्टर → साइलेंसर','Cylinder → exhaust manifold → turbine (the gas heat and pressure spin the turbine wheel) → downpipe → catalytic converter → silencer')+'</div>'+
+    '<ul><li><b>'+tx('ટર્બાઇન અને કમ્પ્રેસર એક જ શાફ્ટ પર','टर्बाइन और कम्प्रेसर एक ही शाफ्ट पर','Turbine and compressor share one shaft')+'</b> — '+tx('શાફ્ટ 1.5 લાખ rpm સુધી ફરે, એટલે ટર્બો એન્જિન ઓઇલના દબાણથી ચાલતા બેરિંગ પર ફરે.','शाफ्ट 1.5 लाख rpm तक घूमता है, इसलिए टर्बो इंजन ऑयल के दबाव से चलने वाले बेयरिंग पर घूमता है.','the shaft reaches 150,000 rpm, so it runs on bearings fed by engine oil pressure.')+'</li>'+
+    '<li><b>'+tx('વેસ્ટગેટ','वेस्टगेट','Wastegate')+'</b> — '+tx('બૂસ્ટ મર્યાદા (અહીં 0.8 bar) થાય ત્યારે એક્ચ્યુએટર ફ્લેપ ખોલે અને વધારાનો ગેસ ટર્બાઇનની બહારથી જાય, જેથી બૂસ્ટ વધુ ન વધે.','बूस्ट सीमा (यहाँ 0.8 bar) होने पर एक्चुएटर फ्लैप खोलता है और अतिरिक्त गैस टर्बाइन से बाहर जाती है, ताकि बूस्ट और न बढ़े.','at the boost limit (0.8 bar here) the actuator opens a flap so surplus gas bypasses the turbine and boost stops rising.')+'</li>'+
+    '<li><b>'+tx('ટર્બો લેગ','टर्बो लैग','Turbo lag')+'</b> — '+tx('ધીમી ઝડપે ગેસ ઓછો હોય, ટર્બો ઝડપ પકડે ત્યાં સુધી બૂસ્ટ મોડો આવે. સિમ્યુલેટરમાં ઝડપ વધારો અને બૂસ્ટ મીટર જુઓ.','धीमी गति पर गैस कम होती है, टर्बो रफ़्तार पकड़े तब तक बूस्ट देर से आता है. सिम्युलेटर में गति बढ़ाएँ और बूस्ट मीटर देखें.','at low speed there is little exhaust, so boost arrives late while the turbo spools up. Raise the speed in the simulator and watch the boost readout.')+'</li>'+
+    '<li><b>'+tx('ટર્બો એન્જિનમાં કમ્પ્રેશન રેશિયો ઓછો','टर्बो इंजन में कम्प्रेशन रेशियो कम','Lower compression ratio')+'</b> — '+tx('દબાયેલી હવા પહેલેથી ગરમ હોય, એટલે નોકિંગ ટાળવા CR ≈ 9.5:1 રાખાય.','दबी हवा पहले से गर्म होती है, इसलिए नॉकिंग से बचने के लिए CR ≈ 9.5:1 रखा जाता है.','pressurised air is already warm, so CR is kept ≈ 9.5:1 to avoid knock.')+'</li></ul>'+
+    '<div class="tb" style="--c:#dc2626"><b>⚠️ '+tx('ટર્બોની કાળજી','टर्बो की देखभाल','Turbo care')+'</b><br>'+tx('સ્ટાર્ટ કર્યા પછી 30 સેકન્ડ આઇડલ પર રાખો · ભારે ડ્રાઇવ પછી બંધ કરતાં પહેલાં 1 મિનિટ આઇડલ (ટર્બો ઠંડો થાય) · સમયસર ઓઇલ અને ઓઇલ ફિલ્ટર બદલો · એર ફિલ્ટર સાફ રાખો. વાદળી ધુમાડો અને ઓઇલ ઓછું થાય તો ટર્બો સીલ ખરાબ હોઈ શકે.','स्टार्ट करने के बाद 30 सेकंड आइडल पर रखें · भारी ड्राइव के बाद बंद करने से पहले 1 मिनट आइडल (टर्बो ठंडा हो) · समय पर ऑयल और ऑयल फ़िल्टर बदलें · एयर फ़िल्टर साफ रखें. नीला धुआँ और ऑयल कम हो तो टर्बो सील खराब हो सकती है.','Idle 30 s after a cold start · idle 1 min before switching off after hard driving (lets the turbo cool) · change oil and filter on time · keep the air filter clean. Blue smoke with oil loss can mean worn turbo seals.')+'</div>')+
+  sec(11,tx('ધુમાડાનો રંગ શું કહે છે?','धुएँ का रंग क्या बताता है?','What does the smoke colour tell you?'),
     '<div class="tbl"><table><tr><th>'+tx('રંગ','रंग','Colour')+'</th><th>'+tx('કારણ','कारण','Cause')+'</th><th>'+tx('શું તપાસવું','क्या जाँचें','What to check')+'</th></tr>'+
     '<tr><td>◻️ '+tx('લગભગ દેખાય નહીં','लगभग दिखता नहीं','Almost invisible')+'</td><td>'+tx('સારું દહન','अच्छा दहन','Good combustion')+'</td><td>—</td></tr>'+
     '<tr><td>⚫ '+tx('કાળો','काला','Black')+'</td><td>'+tx('વધુ ફ્યુઅલ (રીચ મિશ્રણ)','ज़्यादा फ्यूल (रिच मिश्रण)','Too much fuel (rich mixture)')+'</td><td>'+tx('એર ફિલ્ટર, ઇન્જેક્ટર, MAF/O₂ સેન્સર','एयर फ़िल्टर, इंजेक्टर, MAF/O₂ सेंसर','Air filter, injectors, MAF/O₂ sensor')+'</td></tr>'+
@@ -1715,7 +1818,12 @@ const Q=[
  {q:A('આ એન્જિનમાં ઓઇલ પંપ કોનાથી ચાલે છે?','इस इंजन में ऑयल पंप किससे चलता है?','In this engine the oil pump is driven by?'),o:[A('ક્રેન્કશાફ્ટ','क्रैंकशाफ्ट','The crankshaft'),A('કેમશાફ્ટ','कैमशाफ्ट','The camshaft'),A('ઓલ્ટરનેટર','अल्टरनेटर','The alternator'),A('ઇલેક્ટ્રિક મોટર','इलेक्ट्रिक मोटर','An electric motor')],x:A('ક્રેન્કના આગળના છેડે ટ્રોકોઇડલ પંપ.','क्रैंक के आगे के सिरे पर ट्रोकोइडल पंप.','A trochoid pump on the front of the crank.')},
  {q:A('હેડમાંથી વાલ્વ કાઢવા કયું સાધન વપરાય?','हेड से वाल्व निकालने के लिए कौन-सा औज़ार?','Which tool removes valves from the head?'),o:[A('વાલ્વ સ્પ્રિંગ કમ્પ્રેસર','वाल्व स्प्रिंग कम्प्रेसर','Valve-spring compressor'),A('પિસ્ટન રિંગ એક્સપાન્ડર','पिस्टन रिंग एक्सपैंडर','Piston-ring expander'),A('ફિલ્ટર રેન્ચ','फ़िल्टर रिंच','Filter wrench'),A('ફીલર ગેજ','फीलर गेज','Feeler gauge')],x:A('સ્પ્રિંગ દબાવી કોલેટ (કોટર) કાઢવા.','स्प्रिंग दबाकर कॉलेट (कॉटर) निकालने के लिए.','It compresses the spring so the collets can be removed.')},
  {q:A('સિલિન્ડર નંબર 1 સામાન્ય રીતે ક્યાં હોય?','सिलेंडर नंबर 1 आमतौर पर कहाँ होता है?','Where is cylinder 1 normally?'),o:[A('ટાઇમિંગ બેલ્ટ (આગળ) બાજુ','टाइमिंग बेल्ट (आगे) की ओर','At the timing-belt (front) end'),A('ફ્લાયવ્હીલ બાજુ','फ्लाईव्हील की ओर','At the flywheel end'),A('વચ્ચે','बीच में','In the middle'),A('કોઈ પણ જગ્યાએ','कहीं भी','Anywhere')],x:A('ટાઇમિંગ માર્ક સિલિન્ડર 1 ના TDC માટે હોય છે.','टाइमिंग मार्क सिलेंडर 1 के TDC के लिए होते हैं.','The timing marks refer to cylinder 1 TDC.')},
- {q:A('મેઇન બેરિંગ ક્લિયરન્સ શેનાથી માપાય?','मेन बेयरिंग क्लीयरेंस किससे मापा जाता है?','Main bearing clearance is measured with?'),o:[A('પ્લાસ્ટિગેજ','प्लास्टिगेज','Plastigauge'),A('વર્નિયર કેલિપર','वर्नियर कैलिपर','Vernier caliper'),A('ટાયર પ્રેશર ગેજ','टायर प्रेशर गेज','Tyre pressure gauge'),A('મલ્ટિમીટર','मल्टीमीटर','Multimeter')],x:A('કચડાયેલી પ્લાસ્ટિક દોરીની પહોળાઈ ક્લિયરન્સ બતાવે (0.02–0.05 mm).','कुचली प्लास्टिक डोरी की चौड़ाई क्लीयरेंस बताती है (0.02–0.05 mm).','The width of the crushed plastic thread shows the clearance (0.02–0.05 mm).')}
+ {q:A('મેઇન બેરિંગ ક્લિયરન્સ શેનાથી માપાય?','मेन बेयरिंग क्लीयरेंस किससे मापा जाता है?','Main bearing clearance is measured with?'),o:[A('પ્લાસ્ટિગેજ','प्लास्टिगेज','Plastigauge'),A('વર્નિયર કેલિપર','वर्नियर कैलिपर','Vernier caliper'),A('ટાયર પ્રેશર ગેજ','टायर प्रेशर गेज','Tyre pressure gauge'),A('મલ્ટિમીટર','मल्टीमीटर','Multimeter')],x:A('કચડાયેલી પ્લાસ્ટિક દોરીની પહોળાઈ ક્લિયરન્સ બતાવે (0.02–0.05 mm).','कुचली प्लास्टिक डोरी की चौड़ाई क्लीयरेंस बताती है (0.02–0.05 mm).','The width of the crushed plastic thread shows the clearance (0.02–0.05 mm).')},
+ {q:A('ટર્બોચાર્જરનું ટર્બાઇન વ્હીલ શેનાથી ફરે છે?','टर्बोचार्जर का टर्बाइन व्हील किससे घूमता है?','What drives the turbine wheel of a turbocharger?'),o:[A('એક્ઝોસ્ટ ગેસથી','एग्ज़ॉस्ट गैस से','Exhaust gas'),A('ક્રેન્કશાફ્ટના બેલ્ટથી','क्रैंकशाफ्ट के बेल्ट से','A belt from the crankshaft'),A('ઇલેક્ટ્રિક મોટરથી','इलेक्ट्रिक मोटर से','An electric motor'),A('કેમશાફ્ટથી','कैमशाफ्ट से','The camshaft')],x:A('એક્ઝોસ્ટની ગરમી અને દબાણ ટર્બાઇન ફેરવે. બેલ્ટથી ચાલે તે સુપરચાર્જર.','एग्ज़ॉस्ट की गर्मी और दबाव टर्बाइन घुमाते हैं. बेल्ट से चले तो वह सुपरचार्जर है.','Exhaust heat and pressure spin the turbine. A belt-driven blower is a supercharger.')},
+ {q:A('ઇન્ટરકૂલરનું મુખ્ય કામ શું છે?','इंटरकूलर का मुख्य काम क्या है?','What is the main job of the intercooler?'),o:[A('ટર્બોમાંથી આવતી ગરમ હવા ઠંડી કરવી','टर्बो से आने वाली गर्म हवा ठंडी करना','Cool the hot air coming from the turbo'),A('એન્જિન ઓઇલ ઠંડું કરવું','इंजन ऑयल ठंडा करना','Cool the engine oil'),A('કૂલન્ટ ઠંડું કરવું','कूलेंट ठंडा करना','Cool the coolant'),A('એક્ઝોસ્ટ ગેસ ઠંડો કરવો','एग्ज़ॉस्ट गैस ठंडी करना','Cool the exhaust gas')],x:A('ઠંડી હવા ઘટ્ટ હોય — વધુ ઓક્સિજન, વધુ પાવર, નોકિંગ ઓછું.','ठंडी हवा घनी होती है — ज़्यादा ऑक्सीजन, ज़्यादा पावर, नॉकिंग कम.','Cooler air is denser — more oxygen, more power, less knock.')},
+ {q:A('ટર્બોમાં વેસ્ટગેટ શા માટે હોય છે?','टर्बो में वेस्टगेट क्यों होता है?','Why does a turbo have a wastegate?'),o:[A('બૂસ્ટ દબાણ મર્યાદામાં રાખવા','बूस्ट दबाव सीमा में रखने के लिए','To limit the boost pressure'),A('ઓઇલ દબાણ વધારવા','ऑयल दबाव बढ़ाने के लिए','To raise oil pressure'),A('હવા ગાળવા','हवा छानने के लिए','To filter the air'),A('ટર્બોને ઠંડો કરવા','टर्बो को ठंडा करने के लिए','To cool the turbo')],x:A('મર્યાદા પહોંચે ત્યારે વધારાનો એક્ઝોસ્ટ ટર્બાઇનની બહારથી જાય.','सीमा पहुँचने पर अतिरिक्त एग्ज़ॉस्ट टर्बाइन से बाहर जाता है.','At the limit, surplus exhaust bypasses the turbine.')},
+ {q:A('ટર્બોના બેરિંગને લુબ્રિકેશન ક્યાંથી મળે છે?','टर्बो के बेयरिंग को लुब्रिकेशन कहाँ से मिलता है?','Where do the turbo bearings get their lubrication?'),o:[A('એન્જિન ઓઇલ ફીડ લાઇનથી','इंजन ऑयल फीड लाइन से','From an engine-oil feed line'),A('ગ્રીસ ભરેલા સીલ બેરિંગથી','ग्रीस भरे सील बेयरिंग से','Sealed grease-packed bearings'),A('ફ્યુઅલથી','फ्यूल से','From the fuel'),A('કૂલન્ટથી','कूलेंट से','From the coolant')],x:A('ફીડ લાઇન દબાણવાળું ઓઇલ આપે, રિટર્ન લાઇન તેને સમ્પમાં પાછું લાવે.','फीड लाइन दबाव वाला ऑयल देती है, रिटर्न लाइन उसे संप में वापस लाती है.','The feed line supplies pressurised oil; the return line drains it to the sump.')},
+ {q:A('ભારે ડ્રાઇવ પછી ટર્બો એન્જિન તરત બંધ કેમ ન કરવું?','भारी ड्राइव के बाद टर्बो इंजन तुरंत बंद क्यों न करें?','Why not switch a turbo engine off straight after hard driving?'),o:[A('ઓઇલ વગર ગરમ ટર્બોના બેરિંગ ખરાબ થાય','ऑयल के बिना गर्म टर्बो के बेयरिंग खराब होते हैं','The hot turbo bearings get damaged without oil flow'),A('બેટરી ડાઉન થાય','बैटरी डाउन होती है','The battery goes flat'),A('ફ્યુઅલ વધુ વપરાય','फ्यूल ज़्यादा लगता है','It uses more fuel'),A('એર ફિલ્ટર બંધ થાય','एयर फ़िल्टर बंद होता है','The air filter clogs')],x:A('1 મિનિટ આઇડલ રાખવાથી ઓઇલ ફરતું રહે અને ટર્બો ઠંડો થાય — ઓઇલ કોકિંગ થતું નથી.','1 मिनट आइडल रखने से ऑयल घूमता रहता है और टर्बो ठंडा होता है — ऑयल कोकिंग नहीं होती.','A minute at idle keeps oil flowing while the turbo cools — no oil coking.')}
 ];
 const MQ={started:false,order:[],i:0,ok:0,done:0,wrong:[],ans:false,cur:null};
 function mqIntro(){$('mqBox').innerHTML='<div class="card res"><div style="font-size:44px">📝</div><h2 style="font-size:24px">'+tx('એન્જિન MCQ','इंजन MCQ','Engine MCQ')+'</h2><p style="font-size:16px">'+Q.length+' '+tx('પ્રશ્નો','प्रश्न','questions')+'</p><p style="color:var(--mute)">'+tx('ITI, GSRTC હેલ્પર ભરતી અને ટ્રેડ થિયરી પરીક્ષા માટે','ITI, भर्ती परीक्षा और ट्रेड थ्योरी के लिए','For ITI, recruitment and trade-theory exams')+'</p><div class="mact" style="justify-content:center"><button class="btn pri" id="mqGo" style="font-size:18px;padding:12px 22px">▶ '+tx('શરૂ કરો','शुरू करें','Start')+'</button></div></div>';$('mqGo').onclick=()=>{ac();SND.click();mqStart();};}

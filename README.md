@@ -1,6 +1,6 @@
 # એન્જિન ડિસમેન્ટલિંગ લેબ · Engine Dismantling Lab
 
-3D simulator of a 4-cylinder 2.0 L DOHC 16V petrol engine, made for ITI Mechanic Diesel / Motor Vehicle students.
+3D simulator of a 4-cylinder 2.0 L DOHC 16V turbocharged petrol engine, made for ITI Mechanic Diesel / Motor Vehicle students.
 Students take the engine apart part by part, look inside, and watch how it runs.
 
 **Languages:** ગુજરાતી · हिंदी · English
