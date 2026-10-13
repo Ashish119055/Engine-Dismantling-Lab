@@ -382,13 +382,13 @@ const SYS={
 /* ---------------- renderer / scene ---------------- */
 const view=$('view');
 const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.08;
 renderer.physicallyCorrectLights=true;
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;
+renderer.shadowMap.type=THREE.PCFShadowMap;
 renderer.localClippingEnabled=true;
 view.appendChild(renderer.domElement);
 
@@ -414,7 +414,7 @@ controls.maxPolarAngle=Math.PI*0.56;
 })();
 scene.add(new THREE.HemisphereLight(0xeef3f8,0x30343a,0.8));
 const key=new THREE.DirectionalLight(0xfff2e0,2.5);
-key.position.set(6,13,8);key.castShadow=true;key.shadow.mapSize.set(2048,2048);
+key.position.set(6,13,8);key.castShadow=true;key.shadow.mapSize.set(1024,1024);
 Object.assign(key.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:45});
 key.shadow.bias=-0.0003;key.shadow.normalBias=0.02;scene.add(key);
 const rim=new THREE.DirectionalLight(0xbcd2ff,1.1);rim.position.set(-9,6,-7);scene.add(rim);
@@ -523,7 +523,7 @@ function gearShape(r,teeth,depth,hole){const s=new THREE.Shape();const N=teeth*1
 function pulleyGeo(r,w,grooves,hub){const pts=[];const h=w/2;pts.push(new THREE.Vector2(hub||0.05,-h));pts.push(new THREE.Vector2(r,-h));if(grooves){const n=grooves*2;for(let i=0;i<=n;i++){const y=-h+0.02+(w-0.04)*i/n;pts.push(new THREE.Vector2(i%2?r-0.025:r,y));}}pts.push(new THREE.Vector2(r,h));pts.push(new THREE.Vector2(hub||0.05,h));const g=new THREE.LatheGeometry(pts,48);g.rotateZ(-Math.PI/2);return g;}
 const boltHeadG=new THREE.CylinderGeometry(0.042,0.042,0.04,6),washerG=new THREE.CylinderGeometry(0.058,0.058,0.012,18);
 function bolt(g,x,y,z,axis,mat){const b=new THREE.Group();const h=new THREE.Mesh(boltHeadG,mat||M.bolt);h.position.y=0.032;const w=new THREE.Mesh(washerG,mat||M.bolt);w.position.y=0.006;b.add(h,w);
-  const r={x:[0,0,-Math.PI/2],'-x':[0,0,Math.PI/2],z:[Math.PI/2,0,0],'-z':[-Math.PI/2,0,0],'-y':[Math.PI,0,0],y:[0,0,0]}[axis||'y'];b.rotation.set(r[0],r[1],r[2]);b.position.set(x,y,z);g.add(b);return b;}
+  const r={x:[0,0,-Math.PI/2],'-x':[0,0,Math.PI/2],z:[Math.PI/2,0,0],'-z':[-Math.PI/2,0,0],'-y':[Math.PI,0,0],y:[0,0,0]}[axis||'y'];b.rotation.set(r[0],r[1],r[2]);b.position.set(x,y,z);b.userData.st=1;g.add(b);return b;}
 function hull2(pts){pts.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];for(const p of pts){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p);}for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p);}up.pop();lo.pop();return lo.concat(up);}
 function pulleyHull(circles,grow){const pts=[];for(const c of circles)for(let i=0;i<72;i++){const a=i/72*TAU;pts.push([c.z+Math.cos(a)*(c.r+(grow||0)),c.y+Math.sin(a)*(c.r+(grow||0))]);}return hull2(pts);}
 function resample(poly,step){const out=[];const n=poly.length;let carry=0;for(let i=0;i<n;i++){const a=poly[i],b=poly[(i+1)%n];const dx=b[0]-a[0],dy=b[1]-a[1];const L=Math.hypot(dx,dy);let t=carry;while(t<L){out.push([a[0]+dx*t/L,a[1]+dy*t/L]);t+=step;}carry=t-L;}return out;}
@@ -832,7 +832,7 @@ part('valvetrain',{sys:'top',dir:[0,1,0],dist:0.45,internal:true,requires:['cams
   XS.forEach((x,k)=>[0,1].forEach(ci=>[-0.17,0.17].forEach(dx=>{
     const vg=new THREE.Group();vg.position.set(x+dx,2.2,CAM_Z[ci]);g.add(vg);const hr=ci===0?0.135:0.115;
     vg.add(mesh(new THREE.CylinderGeometry(0.03,hr,0.045,32),ci===0?M.valveIn:M.valveEx,0,0.0225,0));vg.add(mesh(cylY(0.022,0.64,12),M.valveStem,0,0.36,0));vg.add(mesh(cylY(0.06,0.02,20),M.steel,0,0.63,0));vg.add(mesh(cylY(0.115,0.1,28),M.machined,0,0.685,0));
-    const sp=mesh(springG,M.darkSteel,x+dx,2.53,CAM_Z[ci]);g.add(sp);valves.push({g:vg,spring:sp,k,kind:ci===0?'in':'ex'});})));
+    const sp=mesh(springG,M.darkSteel,x+dx,2.53,CAM_Z[ci]);sp.userData.keep=1;g.add(sp);valves.push({g:vg,spring:sp,k,kind:ci===0?'in':'ex'});})));
 });
 part('head',{sys:'top',dir:[0,0.35,1],dist:2.6,housing:true,requires:['valvetrain','intakeManifold','exhaustManifold','thermostat','sparkPlugs','timingBelt'],
   n:A('સિલિન્ડર હેડ','सिलेंडर हेड','Cylinder head'),
@@ -1218,6 +1218,19 @@ const gasPs=[];for(let k=0;k<4;k++)for(let i=0;i<GPN;i++){gasPs.push({k,r:Math.s
 /* exhaust smoke colour (diagnosis) */
 const SMOKE={normal:{c:0xc9cdd2,o:0.22},black:{c:0x1d2025,o:0.8},blue:{c:0x5f7fbf,o:0.6},white:{c:0xf3f5f7,o:0.75}};
 
+/* performance: merge static meshes that share a material (bolts, ribs, slots…) into one draw call per container */
+function mergeGeos(list){const parts=list.map(({geo,mat})=>{let g=geo.index?geo.toNonIndexed():geo.clone();g.applyMatrix4(mat);if(!g.attributes.normal)g.computeVertexNormals();return g;});
+  let n=0;parts.forEach(g=>n+=g.attributes.position.count);const P_=new Float32Array(n*3),N_=new Float32Array(n*3),U_=new Float32Array(n*2);let o=0;
+  parts.forEach(g=>{const c=g.attributes.position.count;P_.set(g.attributes.position.array,o*3);N_.set(g.attributes.normal.array,o*3);if(g.attributes.uv)U_.set(g.attributes.uv.array,o*2);o+=c;g.dispose();});
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P_,3));m.setAttribute('normal',new THREE.BufferAttribute(N_,3));m.setAttribute('uv',new THREE.BufferAttribute(U_,2));m.computeBoundingSphere();return m;}
+function mergeStatic(root){const conts=[];root.traverse(o=>{if(!o.isMesh&&!o.userData.st)conts.push(o);});
+  conts.forEach(c=>{const by=new Map();const add=(mesh,mat,owner)=>{const k=mesh.material;if(!by.has(k))by.set(k,[]);by.get(k).push({geo:mesh.geometry,mat,owner});};
+    c.children.slice().forEach(ch=>{ch.updateMatrix();
+      if(ch.isMesh&&!ch.name&&!ch.userData.keep&&!ch.children.length&&ch.renderOrder===0&&!ch.geometry.attributes.color)add(ch,ch.matrix.clone(),ch);
+      else if(ch.userData.st&&!ch.isMesh){ch.children.forEach(m=>{if(m.isMesh){m.updateMatrix();add(m,ch.matrix.clone().multiply(m.matrix),ch);}});}});
+    by.forEach((list,mat)=>{if(list.length<2)return;const mm=new THREE.Mesh(mergeGeos(list),mat);c.add(mm);list.forEach(it=>{if(it.owner.parent)c.remove(it.owner);});});});}
+ORDER.forEach(id=>mergeStatic(P[id].group));
+
 /* material cloning, tagging, colour tint */
 const cutPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),0);
 ORDER.forEach(id=>{const p=P[id];const cache=new Map();
@@ -1337,7 +1350,7 @@ ORDER.forEach(id=>{const p=P[id];p.center=new THREE.Box3().setFromObject(p.group
 const HL_SEL=new THREE.Color(0x7a3a00),HL_HOV=new THREE.Color(0x2e1a04),HL_Q=new THREE.Color(0x9a0a5a),BLACK=new THREE.Color(0),tmpC=new THREE.Color();
 function smooth(e0,e1,x){const t=Math.min(1,Math.max(0,(x-e0)/(e1-e0)));return t*t*(3-2*t);}
 function updateParts(dt,now){
-  ORDER.forEach(id=>{const p=P[id];const tgt=p.removed?1:0;
+  ORDER.forEach(id=>{const p=P[id];const tgt=p.removed?1:0;if(Math.abs(tgt-p.t)>1e-4)WAKE=now;
     const sp=reduceMotion?10:1.5;p.t+=Math.sign(tgt-p.t)*Math.min(Math.abs(tgt-p.t),dt*sp);
     const ease=p.t*p.t*(3-2*p.t);
     let travel=p.dist*state.explode+ease*(p.dist*0.6+1.6),fade=1-smooth(0.45,1,p.t);
@@ -1796,6 +1809,10 @@ $('fsBtn').onclick=()=>{ac();SND.click();document.body.classList.contains('fs')?
 if(matchMedia('(min-width:980px) and (pointer:fine)').matches){const once=e=>{document.removeEventListener('pointerdown',once,true);if(e.target.closest&&e.target.closest('#fsBtn'))return;if(!document.body.classList.contains('fs')&&(document.fullscreenEnabled||document.webkitFullscreenEnabled))fsEnter();};document.addEventListener('pointerdown',once,true);}
 fsLabel();
 let last=performance.now(),uiTick=0;
+/* render only while something changes (camera, engine, animation, input) — idle engine costs ~0 GPU */
+let WAKE=performance.now();const wake=()=>{WAKE=performance.now();};
+['pointerdown','pointermove','wheel','keydown','input','change','click','touchmove'].forEach(e=>addEventListener(e,wake,{passive:true,capture:true}));
+controls.addEventListener('change',wake);new ResizeObserver(wake).observe(view);document.addEventListener('visibilitychange',wake);
 function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
   demoTick(dt);
   let dDeg=state.handD;state.handD=0;
@@ -1809,7 +1826,9 @@ function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
     if(state.auto==='strip'){const n=nextPart();if(n)removePart(n.id);else{state.auto=null;renderDock();SND.win();}}
     else{if(state.stack.length)installPart(state.stack[state.stack.length-1]);else{state.auto=null;renderDock();SND.win();}}}}
   if(state.camAnim){const a=state.camAnim;a.t=Math.min(1,a.t+dt*1.8);const e=a.t*a.t*(3-2*a.t);controls.target.lerpVectors(a.ft,a.tt,e);camera.position.lerpVectors(a.fp,a.tp,e);if(a.t>=1)state.camAnim=null;}
-  if(state.tab==='sim'&&view.clientWidth){updateMechanics();updateParts(dt,now);updateFx();updateFlows(dDeg,dt,now-state.lastTurn<700);controls.update();renderer.render(scene,camera);updateLabels();if(++uiTick%4===0)updateCycleUI();}
+  if(dDeg||state.running||state.pending||state.auto||state.camAnim||D.mode)WAKE=now;
+  const live=now-WAKE<1200&&!document.hidden;
+  if(state.tab==='sim'&&view.clientWidth&&live){updateMechanics();updateParts(dt,now);updateFx();updateFlows(dDeg,dt,now-state.lastTurn<700);controls.update();renderer.shadowMap.needsUpdate=true;renderer.render(scene,camera);updateLabels();if(++uiTick%4===0)updateCycleUI();}
   else gasLabEls.forEach(l=>l.hidden=true);
   requestAnimationFrame(loop);}
 setTog($('tColor'),false);
