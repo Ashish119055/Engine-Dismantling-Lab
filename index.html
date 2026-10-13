@@ -502,6 +502,9 @@ M.compAlu=std({color:0xc9ccce,metalness:0.85,roughness:0.38,bumpMap:castTex,bump
 M.icFin=std({color:0xffffff,metalness:0.6,roughness:0.5,map:canvasTex(64,64,(c,w,h)=>{c.fillStyle='#2b2e33';c.fillRect(0,0,w,h);c.fillStyle='#9aa0a6';for(let y=0;y<h;y+=4)c.fillRect(0,y,w,2);},1)});
 M.icFin.map.repeat.set(1,14);
 M.siliconeBlue=std({color:0x1d4ed8,roughness:0.55});
+M.plugGreen=std({color:0x2f7d4f,roughness:0.5});M.plugBlue=std({color:0x2b5fb3,roughness:0.5});M.plugBlack=std({color:0x18191b,roughness:0.45});
+M.loom=std({color:0x111214,roughness:0.75,bumpMap:canvasTex(16,64,(c,w,h)=>{for(let y=0;y<h;y+=8){c.fillStyle='#fff';c.fillRect(0,y,w,4);c.fillStyle='#000';c.fillRect(0,y+4,w,4);}},1),bumpScale:0.01}); /* corrugated wiring loom */
+M.oxWire=std({color:0x8b9097,roughness:0.6});M.sensorBody=std({color:0x222326,roughness:0.42,metalness:0.1});
 Object.assign(M,{
   shell:std({color:0xc8894a,metalness:0.9,roughness:0.3,side:THREE.DoubleSide}),
   gasketR:std({color:0x7a1f1f,roughness:0.7}),
@@ -561,6 +564,16 @@ const JOURNALS=[-1.8875,-0.95,0,0.95,1.8875];
 const TB={crank:{y:0,z:0,r:0.2},wp:{y:1.05,z:-0.42,r:0.17},camI:{y:CAM_Y,z:-0.4,r:0.36},camE:{y:CAM_Y,z:0.4,r:0.36},ten:{y:1.45,z:0.45,r:0.12}};
 const STARTER=(()=>{const d=Math.hypot(0.29,0.957),R=1.33;return {y:-0.29/d*R,z:-0.957/d*R};})(); // pinion centre: ring-gear pitch 1.245 + pinion pitch 0.085
 function cylZ(r,len,seg){const g=new THREE.CylinderGeometry(r,r,len,seg||32);g.rotateX(Math.PI/2);return g;}
+/* generic screw-in / bolt-on sensor, built along +y then turned to point out of its boss along dir:
+   hex (threads go into the part) → metal or plastic body → connector with locking tab → corrugated loom */
+function sensor(g,p,dir,o){const s=new THREE.Group();s.position.copy(p);s.quaternion.setFromUnitVectors(V(0,1,0),dir.clone().normalize());g.add(s);let y=0;
+  if(o.ear){s.add(mesh(rbox(o.ear,0.018,0.07,0.02,0.006),M.sensorBody,o.ear/2-0.02,0.009,0));bolt(s,o.ear-0.05,0.018,0,'y');}
+  if(o.hex){s.add(mesh(cylY(o.hex,0.04,6),o.hexMat||M.steel,0,0.02,0));y+=0.04;}
+  if(o.body){const [r,h,mat]=o.body;s.add(mesh(cylY(r,h,24),mat,0,y+h/2,0));y+=h;}
+  if(o.box){const [w,h,d,mat]=o.box;s.add(mesh(rbox(w,h,d,0.02,0.008),mat,0,y+h/2,0));y+=h;}
+  const [pw,ph,pd,pm]=o.plug;const px=o.plugX||0;s.add(mesh(rbox(pw,ph,pd,0.012,0.006),pm,px,y+ph/2,0));s.add(mesh(rbox(0.02,ph*0.6,pd*0.5,0.005,0.003),pm,px+pw/2+0.008,y+ph*0.55,0));
+  const top=y+ph;s.add(tube([V(px,top-0.005,0),V(px,top+0.06,0),V(px+0.08,top+0.11,0.02),V(px+0.2,top+0.12,0.05)],o.wireR||0.018,o.wireMat||M.loom,24,8));
+  return s;}
 // turbo layout: shaft along x below the exhaust collector; turbine at x=0, compressor at x=0.5
 const TURBO={x:0.25,y:0.42,z:1.42};
 const TURBO_IN_PATH=[V(-3.2,2.86,-0.1),V(-3.2,2.8,0.4),V(-3.05,2.4,1.1),V(-2.6,1.7,1.8),V(-1.6,1.15,2.1),V(0.4,1.15,2.1),V(1.05,1.05,1.9),V(1.15,0.7,1.55),V(0.95,0.45,1.42),V(0.78,0.42,1.42)];
@@ -597,7 +610,7 @@ part('airIntake',{sys:'air',dir:[-1,0.4,-0.6],dist:2.0,
   g.add(tube(TURBO_IN_PATH,0.12,M.rubber,160,16));
   g.add(mesh(cylZ(0.15,0.08),M.plastic,-3.2,2.86,-0.13));
   const c1=mesh(new THREE.TorusGeometry(0.128,0.016,8,32),M.steel,0.84,0.42,1.42);c1.rotation.y=Math.PI/2;g.add(c1);
-  g.add(mesh(rbox(0.12,0.1,0.12,0.02),M.connector,-3.2,2.95,0.25));
+
   g.add(mesh(cylX(0.11,0.32),M.plastic,-3.82,2.9,-0.35));
   const lip=mesh(new THREE.TorusGeometry(0.11,0.018,8,28),M.plastic,-3.98,2.9,-0.35);lip.rotation.y=Math.PI/2;g.add(lip);
 });
@@ -1024,7 +1037,7 @@ part('catConverter',{sys:'exh',dir:[0,-0.3,1],dist:2.2,
   g.add(tube([V(-0.24,0.42,1.42),V(-0.45,0.4,1.42),V(-0.6,0.12,1.38),V(-0.68,-0.28,1.31)],0.11,M.exhaust,40,16));
   const a=V(-0.7,-0.32,1.3),b=V(-1.45,-0.72,1.25);g.add(between(a,b,0.2,M.shield,28));
   g.add(tube([b,V(-1.9,-0.86,1.22),V(-2.62,-0.9,1.2)],0.1,M.exhaust,48,16));
-  g.add(between(V(-0.52,0.3,1.48),V(-0.55,0.4,1.66),0.03,M.steel,12));g.add(between(V(-1.55,-0.76,1.3),V(-1.6,-0.6,1.45),0.03,M.steel,12)); // O₂ sensors before and after the catg.add(mesh(cylX(0.11,0.06),M.machined,-2.64,-0.9,1.2));
+  for(const q of [V(-0.52,0.31,1.5),V(-1.56,-0.72,1.36)])g.add(mesh(cylY(0.055,0.04,20).rotateX(1.1),M.exhaust,q.x,q.y,q.z)); // weld-in bosses for the O₂ sensorsg.add(mesh(cylX(0.11,0.06),M.machined,-2.64,-0.9,1.2));
 });
 part('exhaustGasket',{sys:'exh',dir:[0,0,1],dist:1.6,requires:['exhaustManifold'],
   n:A('એક્ઝોસ્ટ મેનિફોલ્ડ ગાસ્કેટ','एग्ज़ॉस्ट मैनिफोल्ड गैस्केट','Exhaust manifold gasket'),
@@ -1038,28 +1051,31 @@ part('ectSensor',{sys:'cool',dir:[-0.6,1,0],dist:1.4,
   d:A('કૂલન્ટનું તાપમાન ECU ને મોકલે (NTC થર્મિસ્ટર — ગરમ થાય તેમ રેઝિસ્ટન્સ ઘટે). ઠંડા એન્જિનમાં ECU વધુ ફ્યુઅલ આપે અને જરૂર પડે રેડિએટર ફેન ચલાવે.','कूलेंट का तापमान ECU को भेजता है (NTC थर्मिस्टर — गर्म होने पर रेज़िस्टेंस घटता है). ठंडे इंजन में ECU ज़्यादा फ्यूल देता है और ज़रूरत पर रेडिएटर फैन चलाता है.','Sends coolant temperature to the ECU (an NTC thermistor — resistance falls as it heats). On a cold engine the ECU adds fuel, and it runs the radiator fan when needed.'),
   m:A('પિત્તળ બોડી, NTC થર્મિસ્ટર','पीतल बॉडी, NTC थर्मिस्टर','Brass body, NTC thermistor'),s:A('20 °C પર ≈ 2.5 kΩ, 80 °C પર ≈ 0.3 kΩ','20 °C पर ≈ 2.5 kΩ, 80 °C पर ≈ 0.3 kΩ','≈ 2.5 kΩ at 20 °C, ≈ 0.3 kΩ at 80 °C'),f:A('15 N·m (19 mm)','15 N·m (19 mm)','15 N·m (19 mm)'),
   h:A('એન્જિન ઠંડું હોય ત્યારે જ: કનેક્ટર કાઢો → 19 mm ડીપ સોકેટથી ખોલો → થોડું કૂલન્ટ નીકળશે, ટ્રે રાખો.','इंजन ठंडा होने पर ही: कनेक्टर निकालें → 19 mm डीप सॉकेट से खोलें → थोड़ा कूलेंट निकलेगा, ट्रे रखें.','Cold engine only: unplug → undo with a 19 mm deep socket → a little coolant will run out, use a tray.')},g=>{
-  g.add(mesh(cylY(0.045,0.05,6),M.brass,-2.22,2.645,0.3));g.add(mesh(cylY(0.035,0.1),M.connector,-2.22,2.72,0.3));g.add(mesh(rbox(0.07,0.05,0.1,0.01),M.connector,-2.22,2.79,0.33));
+  sensor(g,V(-2.22,2.62,0.3),V(0,1,0),{hex:0.06,hexMat:M.brass,body:[0.04,0.05,M.brass],plug:[0.1,0.08,0.11,M.plugBlue]});g.add(mesh(rbox(0.11,0.012,0.02,0.004,0.003),M.steel,-2.22,2.73,0.3)); // brass NTC sensor + blue plug + retaining clip
 });
 part('oilPressureSwitch',{sys:'lube',dir:[0,0,-1],dist:1.2,
   n:A('ઓઇલ પ્રેશર સ્વિચ','ऑयल प्रेशर स्विच','Oil pressure switch'),
   d:A('ઓઇલ દબાણ ≈ 0.3–0.5 bar થી ઓછું થાય તો ડેશબોર્ડ પર લાલ ઓઇલ લાઇટ ચાલુ કરે. ચાલતા એન્જિનમાં આ લાઇટ આવે તો તરત એન્જિન બંધ કરો.','ऑयल दबाव ≈ 0.3–0.5 bar से कम हो तो डैशबोर्ड पर लाल ऑयल लाइट जलाता है. चलते इंजन में यह लाइट आए तो तुरंत इंजन बंद करें.','Lights the red oil lamp on the dash when pressure falls below ≈ 0.3–0.5 bar. If it comes on while running, stop the engine at once.'),
   m:A('પિત્તળ બોડી, ડાયાફ્રામ','पीतल बॉडी, डायाफ्राम','Brass body, diaphragm'),s:A('≈ 0.4 bar પર સ્વિચ','≈ 0.4 bar पर स्विच','Switches at ≈ 0.4 bar'),f:A('15 N·m','15 N·m','15 N·m'),
   h:A('વાયર કાઢો → 24 mm પાનાથી ખોલો → ફરી લગાવતાં નવું સીલિંગ વોશર.','वायर निकालें → 24 mm पाने से खोलें → दोबारा लगाते समय नया सीलिंग वॉशर.','Remove the wire → undo with a 24 mm spanner → use a new sealing washer on refit.')},g=>{
-  g.add(between(V(0.9,0.55,-0.85),V(0.9,0.55,-0.92),0.05,M.brass,6));g.add(between(V(0.9,0.55,-0.92),V(0.9,0.55,-1.04),0.035,M.steel,16));g.add(mesh(rbox(0.05,0.05,0.04,0.01),M.connector,0.9,0.55,-1.07));
+  sensor(g,V(0.9,0.55,-0.85),V(0,0,-1),{hex:0.06,hexMat:M.steel,body:[0.045,0.06,M.steel],plug:[0.07,0.05,0.07,M.plugBlack],wireR:0.012});
 });
 part('knockSensor',{sys:'elec',dir:[0,-0.2,-1],dist:1.6,
   n:A('નોક સેન્સર','नॉक सेंसर','Knock sensor'),
   d:A('બ્લોક પર બોલ્ટ કરેલો પીઝો-ઇલેક્ટ્રિક "માઇક્રોફોન". ડિટોનેશન (નોકિંગ) નું વાઇબ્રેશન પકડી ECU ને મોકલે, અને ECU સ્પાર્ક થોડો મોડો કરે.','ब्लॉक पर बोल्ट किया पीज़ो-इलेक्ट्रिक "माइक्रोफोन". डिटोनेशन (नॉकिंग) का कंपन पकड़कर ECU को भेजता है, और ECU स्पार्क थोड़ा देर से करता है.','A piezo-electric "microphone" bolted to the block. It picks up detonation (knock) vibration so the ECU can retard the spark.'),
   m:A('પીઝો ક્રિસ્ટલ, સ્ટીલ બુશ','पीज़ो क्रिस्टल, स्टील बुश','Piezo crystal, steel bush'),s:A('5–15 kHz વાઇબ્રેશન','5–15 kHz कंपन','5–15 kHz vibration'),f:A('20 N·m — ઓછો-વધુ ટોર્ક ખોટું વાંચન આપે','20 N·m — कम-ज़्यादा टॉर्क गलत रीडिंग देता है','20 N·m — wrong torque gives false readings'),
   h:A('કનેક્ટર કાઢો → 13 mm બોલ્ટ ખોલો. ફરી લગાવતાં સાચો ટોર્ક (20 N·m) જ આપો.','कनेक्टर निकालें → 13 mm बोल्ट खोलें. दोबारा लगाते समय सही टॉर्क (20 N·m) ही दें.','Unplug → undo the 13 mm bolt. Refit at exactly 20 N·m.')},g=>{
-  g.add(between(V(0,1.25,-0.85),V(0,1.25,-0.93),0.09,M.connector,24));bolt(g,0,1.25,-0.93,'-z');g.add(mesh(rbox(0.06,0.05,0.06,0.01),M.connector,0.13,1.25,-0.9));
+  // piezo knock sensor: ring body bolted through its centre, short lead to a 2-pin plug
+  const kr=new THREE.Shape();kr.absarc(0,0,0.1,0,TAU,false);kr.holes.push(circlePath(0,0,0.035));const kg=extZ(kr,0.06);g.add(mesh(kg,M.sensorBody,0,1.25,-0.88));
+  g.add(mesh(rbox(0.06,0.05,0.06,0.012),M.sensorBody,0.12,1.25,-0.88));bolt(g,0,1.25,-0.91,'-z');
+  g.add(tube([V(0.15,1.25,-0.88),V(0.25,1.27,-0.92),V(0.33,1.3,-0.95)],0.012,M.loom,16,6));g.add(mesh(rbox(0.09,0.06,0.06,0.012),M.plugBlack,0.37,1.31,-0.96));
 });
 part('ckpSensor',{sys:'elec',dir:[-0.5,0.6,1],dist:1.4,
   n:A('ક્રેન્કશાફ્ટ પોઝિશન સેન્સર (CKP)','क्रैंकशाफ्ट पोज़िशन सेंसर (CKP)','Crankshaft position sensor (CKP)'),
   d:A('ફ્લાયવ્હીલના દાંતા પસાર થાય ત્યારે સિગ્નલ બનાવે. તેનાથી ECU એન્જિનની rpm અને પિસ્ટનની સ્થિતિ જાણે. ખરાબ થાય તો એન્જિન સ્ટાર્ટ જ ન થાય.','फ्लाईव्हील के दाँत गुज़रने पर सिग्नल बनाता है. इससे ECU इंजन की rpm और पिस्टन की स्थिति जानता है. खराब हो तो इंजन स्टार्ट ही नहीं होता.','Makes a signal as the flywheel teeth pass, so the ECU knows engine rpm and piston position. If it fails, the engine will not start.'),
   m:A('મેગ્નેટિક / હોલ ઇફેક્ટ','मैग्नेटिक / हॉल इफ़ेक्ट','Magnetic / Hall effect'),s:A('ગેપ 0.5–1.5 mm','गैप 0.5–1.5 mm','Air gap 0.5–1.5 mm'),f:A('M6, 8 N·m','M6, 8 N·m','M6, 8 N·m'),
   h:A('કનેક્ટર કાઢો → 10 mm બોલ્ટ ખોલો → સેન્સર ખેંચો; O-રિંગ અને ટીપ પરની લોખંડની રજ તપાસો.','कनेक्टर निकालें → 10 mm बोल्ट खोलें → सेंसर खींचें; O-रिंग और टिप पर लोहे का बुरादा जाँचें.','Unplug → undo the 10 mm bolt → pull the sensor; check the O-ring and any metal dust on the tip.')},g=>{
-  g.add(between(V(-2.19,0.96,0.96),V(-2.19,1.2,1.2),0.045,M.connector,16));g.add(mesh(rbox(0.07,0.07,0.07,0.01),M.connector,-2.19,1.25,1.25));g.add(mesh(rbox(0.16,0.05,0.2,0.01),M.steel,-2.1,1.08,1.08));
+  sensor(g,V(-2.12,0.98,0.98),V(0,1,1),{ear:0.2,body:[0.045,0.12,M.sensorBody],plug:[0.1,0.07,0.09,M.plugBlack]}); // inductive pickup reading the flywheel teeth
 });
 part('crankSprocket',{sys:'timing',dir:[1,0,0],dist:0.9,requires:['timingBelt'],
   n:A('ક્રેન્ક સ્પ્રોકેટ','क्रैंक स्प्रोकेट','Crankshaft sprocket'),
@@ -1080,7 +1096,7 @@ part('cmpSensor',{sys:'elec',dir:[-1,0.4,0],dist:1.3,
   d:A('કેમશાફ્ટના છેડા પરના નિશાનથી ECU ને કહે કે સિલિન્ડર 1 કમ્પ્રેશનમાં છે કે એક્ઝોસ્ટમાં — જેથી સાચા સિલિન્ડરમાં ઇન્જેક્શન અને સ્પાર્ક થાય.','कैमशाफ्ट के सिरे पर निशान से ECU को बताता है कि सिलेंडर 1 कम्प्रेशन में है या एग्ज़ॉस्ट में — ताकि सही सिलेंडर में इंजेक्शन और स्पार्क हो.','Reads a target on the camshaft end so the ECU knows whether cylinder 1 is on compression or exhaust — so injection and spark go to the right cylinder.'),
   m:A('હોલ ઇફેક્ટ સેન્સર','हॉल इफ़ेक्ट सेंसर','Hall-effect sensor'),s:A('5 V સપ્લાય','5 V सप्लाई','5 V supply'),f:A('M6, 8 N·m','M6, 8 N·m','M6, 8 N·m'),
   h:A('કનેક્ટર કાઢો → 10 mm બોલ્ટ ખોલો → સેન્સર સીધું ખેંચો.','कनेक्टर निकालें → 10 mm बोल्ट खोलें → सेंसर सीधा खींचें.','Unplug → undo the 10 mm bolt → pull the sensor straight out.')},g=>{
-  g.add(mesh(cylX(0.05,0.2),M.connector,-2.26,CAM_Y,0.4));g.add(mesh(rbox(0.07,0.08,0.08,0.01),M.connector,-2.4,CAM_Y,0.4));g.add(mesh(rbox(0.04,0.32,0.18,0.01),M.alu,-2.17,2.88,0.4));
+  sensor(g,V(-2.0,CAM_Y,0.4),V(-1,0,0),{ear:0.18,body:[0.045,0.1,M.sensorBody],plug:[0.1,0.08,0.09,M.plugBlack]}); // Hall sensor reading the cam trigger wheel
 });
 part('oilPanGasket',{sys:'lube',dir:[0,-1,0],dist:0.8,requires:['oilPan'],
   n:A('ઓઇલ પેન ગાસ્કેટ','ऑयल पैन गैस्केट','Oil pan gasket'),
@@ -1114,6 +1130,57 @@ part('mainBearings',{sys:'bottom',dir:[0,-1,0],dist:0.35,requires:['crankshaft']
   m:A('સ્ટીલ બેક + એલ્યુમિનિયમ-ટીન લાઇનિંગ','स्टील बैक + एल्यूमिनियम-टिन लाइनिंग','Steel back + aluminium-tin lining'),s:A('ક્લિયરન્સ 0.02–0.05 mm','क्लीयरेंस 0.02–0.05 mm','Clearance 0.02–0.05 mm'),f:A('ટેબથી લૉક','टैब से लॉक','Located by a tab'),
   h:A('શેલને ટેબની વિરુદ્ધ બાજુથી આંગળીથી સરકાવી કાઢો → જગ્યા પ્રમાણે નિશાન રાખો. ફરી લગાવતાં પ્લાસ્ટિગેજથી ક્લિયરન્સ માપો.','शेल को टैब की उल्टी तरफ से उँगली से सरकाकर निकालें → जगह के अनुसार निशान रखें. दोबारा लगाते समय प्लास्टिगेज से क्लीयरेंस मापें.','Slide each shell out with a thumb from the side opposite its tab → mark its position. On refit, check clearance with Plastigauge.')},g=>{
   const upG=new THREE.CylinderGeometry(0.19,0.19,0.11,28,1,true,0,Math.PI);upG.rotateZ(Math.PI/2);JOURNALS.forEach(x=>g.add(mesh(upG,M.shell,x,0,0)));
+});
+
+/* ===== sensors added so every real sensor of a turbo MPFI engine is present ===== */
+part('mafSensor',{sys:'air',dir:[0,1,0.3],dist:1.4,
+  n:A('MAF સેન્સર (માસ એર ફ્લો + IAT)','MAF सेंसर (मास एयर फ्लो + IAT)','MAF sensor (mass air flow + IAT)'),
+  d:A('ગરમ ફિલ્મ પરથી પસાર થતી હવા તેને ઠંડી કરે — કેટલી ઠંડી થઈ તેના પરથી દર સેકન્ડે કેટલા ગ્રામ હવા અંદર જાય તે માપે. અંદર હવાનું તાપમાન સેન્સર (IAT) પણ છે. ECU આ પરથી ફ્યુઅલ નક્કી કરે.','गर्म फिल्म के ऊपर से गुजरती हवा उसे ठंडा करती है — कितनी ठंडी हुई उससे हर सेकंड कितने ग्राम हवा अंदर जाती है यह मापता है. अंदर हवा का तापमान सेंसर (IAT) भी है. ECU इससे फ्यूल तय करता है.','Air passing a heated film cools it; how much it cools gives the grams of air per second. An intake-air temperature (IAT) sensor is built in. The ECU meters fuel from it.'),
+  m:A('પ્લાસ્ટિક હાઉસિંગ, હોટ-ફિલ્મ ચિપ','प्लास्टिक हाउसिंग, हॉट-फिल्म चिप','Plastic housing, hot-film chip'),s:A('5-પિન, 0–5 V','5-पिन, 0–5 V','5-pin, 0–5 V'),f:A('2 × Torx T20 સ્ક્રૂ','2 × Torx T20 स्क्रू','2 × Torx T20 screws'),
+  h:A('કનેક્ટર કાઢો → 2 Torx સ્ક્રૂ ખોલો → સીધું બહાર ખેંચો. સેન્સરની ફિલ્મને હાથ ન લગાવો; ફક્ત MAF ક્લીનર સ્પ્રે વાપરો.','कनेक्टर निकालें → 2 Torx स्क्रू खोलें → सीधा बाहर खींचें. सेंसर की फिल्म को हाथ न लगाएँ; सिर्फ MAF क्लीनर स्प्रे इस्तेमाल करें.','Unplug → undo 2 Torx screws → pull straight out. Never touch the sensing film; use only MAF cleaner spray.')},g=>{
+  const hs=new THREE.CylinderGeometry(0.15,0.15,0.2,32,1,true);hs.rotateX(Math.PI/2);g.add(mesh(hs,M.plastic,-3.2,2.86,0.02));
+  for(const z of [-0.08,0.12])g.add(mesh(new THREE.TorusGeometry(0.15,0.012,8,32),M.plastic,-3.2,2.86,z));
+  sensor(g,V(-3.2,3.0,0.02),V(0,1,0),{box:[0.3,0.06,0.16,M.sensorBody],plug:[0.12,0.08,0.12,M.plugBlack],plugX:0.06});
+  for(const x of [-0.12,0.12])g.add(mesh(cylY(0.016,0.02,6),M.steel,-3.2+x,3.065,0.02));
+});
+part('tmapSensor',{sys:'turbo',dir:[0,1,-0.3],dist:1.3,
+  n:A('બૂસ્ટ પ્રેશર સેન્સર (TMAP)','बूस्ट प्रेशर सेंसर (TMAP)','Boost pressure sensor (TMAP)'),
+  d:A('ઇન્ટરકૂલર પછીની પાઇપમાં હવાનું દબાણ (બૂસ્ટ) અને તાપમાન માપે. ECU આ પરથી વેસ્ટગેટ ચલાવે અને બૂસ્ટ મર્યાદામાં રાખે. ખરાબ થાય તો એન્જિન લિમ્પ મોડમાં જાય (પાવર ઓછો).','इंटरकूलर के बाद की पाइप में हवा का दबाव (बूस्ट) और तापमान मापता है. ECU इससे वेस्टगेट चलाता है और बूस्ट सीमा में रखता है. खराब हो तो इंजन लिम्प मोड में जाता है (पावर कम).','Measures charge-air pressure (boost) and temperature after the intercooler. The ECU uses it to run the wastegate and hold boost. If it fails the engine drops into limp mode (low power).'),
+  m:A('પ્લાસ્ટિક બોડી, સિલિકોન પ્રેશર ચિપ','प्लास्टिक बॉडी, सिलिकॉन प्रेशर चिप','Plastic body, silicon pressure chip'),s:A('0.2–2.5 bar (abs), 4-પિન','0.2–2.5 bar (abs), 4-पिन','0.2–2.5 bar (abs), 4-pin'),f:A('1 × M6 બોલ્ટ 5 N·m','1 × M6 बोल्ट 5 N·m','1 × M6 bolt 5 N·m'),
+  h:A('કનેક્ટર કાઢો → 10 mm બોલ્ટ ખોલો → ફેરવીને ખેંચો. નવી O-રિંગ લગાવો, નહીં તો બૂસ્ટ લીક.','कनेक्टर निकालें → 10 mm बोल्ट खोलें → घुमाकर खींचें. नई O-रिंग लगाएँ, नहीं तो बूस्ट लीक.','Unplug → undo the 10 mm bolt → twist and pull. Fit a new O-ring or boost will leak.')},g=>{
+  g.add(mesh(cylY(0.05,0.04,20),M.alu,-2.5,1.97,-1.28));
+  sensor(g,V(-2.5,1.99,-1.28),V(0,1,0),{ear:0.17,box:[0.12,0.07,0.1,M.sensorBody],plug:[0.1,0.07,0.1,M.plugBlack]});
+});
+part('mapSensor',{sys:'air',dir:[0,1,-0.2],dist:1.3,
+  n:A('મેનીફોલ્ડ પ્રેશર સેન્સર (MAP)','मैनिफोल्ड प्रेशर सेंसर (MAP)','Manifold pressure sensor (MAP)'),
+  d:A('થ્રોટલ પછી ઇનટેક મેનીફોલ્ડમાં દબાણ માપે — આઇડલ પર વેક્યુમ (≈ 0.3 bar), પૂરા એક્સિલરેટરે બૂસ્ટ (≈ 1.8 bar). ECU આ પરથી એન્જિન પર કેટલો ભાર (લોડ) છે તે જાણે.','थ्रॉटल के बाद इनटेक मैनिफोल्ड में दबाव मापता है — आइडल पर वैक्यूम (≈ 0.3 bar), पूरे एक्सीलरेटर पर बूस्ट (≈ 1.8 bar). ECU इससे इंजन पर कितना लोड है यह जानता है.','Measures pressure in the intake manifold after the throttle — vacuum at idle (≈ 0.3 bar), boost at full throttle (≈ 1.8 bar). The ECU reads engine load from it.'),
+  m:A('પ્લાસ્ટિક બોડી','प्लास्टिक बॉडी','Plastic body'),s:A('0.2–2.5 bar (abs), 3-પિન','0.2–2.5 bar (abs), 3-पिन','0.2–2.5 bar (abs), 3-pin'),f:A('1 × M6 બોલ્ટ 5 N·m','1 × M6 बोल्ट 5 N·m','1 × M6 bolt 5 N·m'),
+  h:A('કનેક્ટર કાઢો → 10 mm બોલ્ટ ખોલો → ફેરવીને ખેંચો.','कनेक्टर निकालें → 10 mm बोल्ट खोलें → घुमाकर खींचें.','Unplug → undo the 10 mm bolt → twist and pull.')},g=>{
+  sensor(g,V(-0.95,2.14,-1.35),V(0,1,-0.25),{ear:0.17,box:[0.12,0.07,0.1,M.sensorBody],plug:[0.1,0.07,0.1,M.plugBlack]});
+});
+part('o2Upstream',{sys:'exh',dir:[0,0.5,1],dist:1.4,
+  n:A('O₂ સેન્સર — કેટ પહેલાં (વાઇડબેન્ડ)','O₂ सेंसर — कैट से पहले (वाइडबैंड)','O₂ sensor — before cat (wideband)'),
+  d:A('ટર્બો પછી ડાઉનપાઇપમાં એક્ઝોસ્ટમાં બાકી ઓક્સિજન માપે. ECU આ પરથી હવા-ફ્યુઅલ ગુણોત્તર 14.7:1 ની નજીક રાખે. ગરમ થયા પછી જ કામ કરે, એટલે અંદર હીટર હોય.','टर्बो के बाद डाउनपाइप में एग्ज़ॉस्ट में बचा ऑक्सीजन मापता है. ECU इससे हवा-फ्यूल अनुपात 14.7:1 के पास रखता है. गर्म होने के बाद ही काम करता है, इसलिए अंदर हीटर होता है.','Measures leftover oxygen in the exhaust in the downpipe after the turbo. The ECU uses it to hold the air-fuel ratio near 14.7:1. It only works hot, so it has a built-in heater.'),
+  m:A('ઝિર્કોનિયા સિરામિક, સ્ટીલ બોડી','ज़िरकोनिया सिरेमिक, स्टील बॉडी','Zirconia ceramic, steel body'),s:A('5-વાયર વાઇડબેન્ડ (LSU)','5-वायर वाइडबैंड (LSU)','5-wire wideband (LSU)'),f:A('22 mm, 45 N·m + એન્ટી-સીઝ','22 mm, 45 N·m + एंटी-सीज़','22 mm, 45 N·m + anti-seize'),
+  h:A('કનેક્ટર કાઢો → 22 mm સ્લોટેડ O₂ સોકેટ (વાયર માટે ખાંચવાળું) થી ખોલો. એન્જિન થોડું ગરમ હોય તો સહેલાઈથી ખૂલે.','कनेक्टर निकालें → 22 mm स्लॉटेड O₂ सॉकेट (तार के लिए खाँचे वाला) से खोलें. इंजन थोड़ा गर्म हो तो आसानी से खुलता है.','Unplug → undo with a 22 mm slotted O₂ socket (slot for the wire). Comes out easier with the engine slightly warm.')},g=>{
+  sensor(g,V(-0.53,0.33,1.52),V(0,0.45,0.9),{hex:0.075,body:[0.05,0.1,M.steel],plug:[0.045,0.09,0.045,M.oxWire],wireR:0.016,wireMat:M.oxWire});
+  g.add(tube([V(-0.53,0.6,1.82),V(-0.5,0.85,1.95),V(-0.35,0.95,2.0)],0.014,M.oxWire,16,6));g.add(mesh(rbox(0.12,0.08,0.08,0.015),M.plugBlack,-0.3,0.96,2.0));
+});
+part('o2Downstream',{sys:'exh',dir:[0,0.5,1],dist:1.4,
+  n:A('O₂ સેન્સર — કેટ પછી','O₂ सेंसर — कैट के बाद','O₂ sensor — after cat'),
+  d:A('કેટ પછીનો સેન્સર કેટ બરાબર કામ કરે છે કે નહીં તે તપાસે. સારા કેટ પછી સિગ્નલ લગભગ સ્થિર રહે; પહેલાના સેન્સર જેવું ઉપર-નીચે થાય તો કેટ ખરાબ (ચેક-એન્જિન લાઇટ).','कैट के बाद वाला सेंसर कैट ठीक काम कर रहा है या नहीं यह जाँचता है. अच्छे कैट के बाद सिग्नल लगभग स्थिर रहता है; पहले वाले सेंसर जैसा ऊपर-नीचे हो तो कैट खराब (चेक-इंजन लाइट).','The post-cat sensor checks the catalytic converter. Behind a good cat its signal stays almost steady; if it swings like the front sensor, the cat is failing (check-engine light).'),
+  m:A('ઝિર્કોનિયા સિરામિક, સ્ટીલ બોડી','ज़िरकोनिया सिरेमिक, स्टील बॉडी','Zirconia ceramic, steel body'),s:A('4-વાયર, 0.1–0.9 V','4-वायर, 0.1–0.9 V','4-wire, 0.1–0.9 V'),f:A('22 mm, 45 N·m + એન્ટી-સીઝ','22 mm, 45 N·m + एंटी-सीज़','22 mm, 45 N·m + anti-seize'),
+  h:A('કનેક્ટર કાઢો → 22 mm સ્લોટેડ O₂ સોકેટથી ખોલો.','कनेक्टर निकालें → 22 mm स्लॉटेड O₂ सॉकेट से खोलें.','Unplug → undo with a 22 mm slotted O₂ socket.')},g=>{
+  sensor(g,V(-1.57,-0.7,1.38),V(0,0.55,0.85),{hex:0.075,body:[0.05,0.1,M.steel],plug:[0.045,0.09,0.045,M.oxWire],wireR:0.016,wireMat:M.oxWire});
+  g.add(tube([V(-1.57,-0.42,1.66),V(-1.55,-0.2,1.8),V(-1.4,-0.1,1.86)],0.014,M.oxWire,16,6));g.add(mesh(rbox(0.12,0.08,0.08,0.015),M.plugBlack,-1.35,-0.09,1.87));
+});
+part('oilLevelSensor',{sys:'lube',dir:[0,-1,0],dist:1.0,
+  n:A('ઓઇલ લેવલ અને ટેમ્પરેચર સેન્સર','ऑयल लेवल और टेम्परेचर सेंसर','Oil level & temperature sensor'),
+  d:A('સમ્પના તળિયેથી અલ્ટ્રાસોનિક/થર્મલ રીતે ઓઇલ લેવલ અને તાપમાન માપે. ડેશબોર્ડ પર "ઓઇલ ઓછું" ચેતવણી અને સર્વિસ અંતર ગણવામાં વપરાય.','संप के तले से अल्ट्रासोनिक/थर्मल तरीके से ऑयल लेवल और तापमान मापता है. डैशबोर्ड पर "ऑयल कम" चेतावनी और सर्विस अंतराल गिनने में इस्तेमाल होता है.','Reads oil level and temperature from the bottom of the sump (thermal/ultrasonic). Drives the dashboard "low oil" warning and the service-interval calculation.'),
+  m:A('પ્લાસ્ટિક બોડી, એલ્યુમિનિયમ ફ્લેન્જ','प्लास्टिक बॉडी, एल्यूमिनियम फ्लैंज','Plastic body, aluminium flange'),s:A('3-પિન','3-पिन','3-pin'),f:A('3 × M6 બોલ્ટ 9 N·m','3 × M6 बोल्ट 9 N·m','3 × M6 bolts 9 N·m'),
+  h:A('પહેલાં ઓઇલ ડ્રેઇન કરો → કનેક્ટર કાઢો → 3 બોલ્ટ ખોલો → નીચે ખેંચો. નવી સીલ લગાવો.','पहले ऑयल ड्रेन करें → कनेक्टर निकालें → 3 बोल्ट खोलें → नीचे खींचें. नई सील लगाएँ.','Drain the oil first → unplug → undo 3 bolts → pull down. Fit a new seal.')},g=>{
+  g.add(mesh(cylY(0.13,0.025,24),M.alu,-0.6,-1.405,0));for(let i=0;i<3;i++){const a=i/3*TAU+0.5;bolt(g,-0.6+Math.cos(a)*0.1,-1.418,Math.sin(a)*0.1,'-y');}
+  sensor(g,V(-0.6,-1.418,0),V(0,-1,0),{body:[0.065,0.09,M.sensorBody],plug:[0.1,0.07,0.09,M.plugBlack]});
 });
 
 /* ===== turbocharger system ===== */
@@ -1201,14 +1268,14 @@ part('intercooler',{sys:'turbo',dir:[0,0,1],dist:1.4,requires:['chargePipes'],
 });
 
 /* final dismantling order, stages, dependencies and how-to text */
-const FINAL=['engineCover','airIntake','chargePipes','intercooler','throttleBody','coils','sparkPlugs','fuelRail','intakeManifold','intakeGasket',
- 'heatShield','catConverter','turboLines','turbo','exhaustManifold','exhaustGasket','ectSensor','thermostat','dipstick','oilFilter','oilPressureSwitch','knockSensor','accBelt','alternator','acCompressor','starter','ckpSensor',
+const FINAL=['engineCover','mafSensor','airIntake','tmapSensor','chargePipes','intercooler','throttleBody','coils','sparkPlugs','fuelRail','mapSensor','intakeManifold','intakeGasket',
+ 'heatShield','o2Upstream','o2Downstream','catConverter','turboLines','turbo','exhaustManifold','exhaustGasket','ectSensor','thermostat','dipstick','oilFilter','oilPressureSwitch','knockSensor','accBelt','alternator','acCompressor','starter','ckpSensor',
  'crankPulley','timingCover','timingBelt','camSprockets','crankSprocket','waterPump',
  'valveCover','valveCoverGasket','cmpSensor','camshafts','head','valvetrain','headGasket',
- 'oilPan','oilPanGasket','oilPickup','oilPump','piston1','piston2','piston3','piston4','flywheel','rearSeal','mainCaps','crankshaft','mainBearings','block'];
+ 'oilLevelSensor','oilPan','oilPanGasket','oilPickup','oilPump','piston1','piston2','piston3','piston4','flywheel','rearSeal','mainCaps','crankshaft','mainBearings','block'];
 if(FINAL.length!==ORDER.length||ORDER.some(id=>FINAL.indexOf(id)<0))console.error('FINAL order mismatch');
 ORDER.sort((a,b)=>FINAL.indexOf(a)-FINAL.indexOf(b));
-const REQ={intakeManifold:['fuelRail','throttleBody'],exhaustManifold:['heatShield','catConverter','turbo'],
+const REQ={intakeManifold:['fuelRail','throttleBody','mapSensor'],airIntake:['mafSensor'],chargePipes:['engineCover','tmapSensor'],catConverter:['o2Upstream','o2Downstream'],oilPan:['dipstick','oilLevelSensor'],exhaustManifold:['heatShield','catConverter','turbo'],
   turbo:['airIntake','chargePipes','catConverter','turboLines'],turboLines:['heatShield'],throttleBody:['chargePipes'],thermostat:['ectSensor'],
   head:['camshafts','intakeManifold','exhaustManifold','thermostat','sparkPlugs','timingBelt','cmpSensor'],valvetrain:['head'],
   flywheel:['starter','ckpSensor'],crankshaft:['mainCaps','flywheel','rearSeal','oilPump','crankSprocket','timingBelt','crankPulley']};
@@ -1764,11 +1831,15 @@ function renderTheory(){
     '<p>'+tx('ECU (એન્જિનનું કમ્પ્યુટર) આ સેન્સરના સિગ્નલ પરથી ફ્યુઅલ અને સ્પાર્ક નક્કી કરે છે.','ECU (इंजन का कंप्यूटर) इन सेंसरों के सिग्नल से फ्यूल और स्पार्क तय करता है.','The ECU (engine computer) decides fuel and spark from these signals.')+'</p><div class="tbl"><table><tr><th>'+tx('સેન્સર','सेंसर','Sensor')+'</th><th>'+tx('શું માપે','क्या मापता है','Measures')+'</th><th>'+tx('ખરાબ થાય તો','खराब हो तो','If it fails')+'</th></tr>'+
     [[ 'CKP',A('ક્રેન્કની ઝડપ અને સ્થિતિ (ફ્લાયવ્હીલના દાંતા)','क्रैंक की गति और स्थिति (फ्लाईव्हील के दाँत)','Crank speed and position (flywheel teeth)'),A('એન્જિન સ્ટાર્ટ જ ન થાય','इंजन स्टार्ट ही नहीं होता','Engine will not start')],
       ['CMP',A('કયો સિલિન્ડર કમ્પ્રેશનમાં છે','कौन-सा सिलेंडर कम्प्रेशन में है','Which cylinder is on compression'),A('સ્ટાર્ટ થવામાં વાર, ચેક-એન્જિન લાઇટ','स्टार्ट होने में देर, चेक-इंजन लाइट','Slow start, check-engine light')],
+      ['TMAP',A('ટર્બો પછી બૂસ્ટ દબાણ અને હવાનું તાપમાન','टर्बो के बाद बूस्ट दबाव और हवा का तापमान','Boost pressure and air temperature after the turbo'),A('લિમ્પ મોડ — પાવર ઓછો','लिम्प मोड — पावर कम','Limp mode — low power')],
+      ['MAP',A('મેનીફોલ્ડ દબાણ = એન્જિન પર ભાર','मैनिफोल्ड दबाव = इंजन पर लोड','Manifold pressure = engine load'),A('ઝટકા, ખરાબ આઇડલ','झटके, खराब आइडल','Hesitation, rough idle')],
       ['MAF',A('અંદર જતી હવાનું પ્રમાણ','अंदर जाने वाली हवा की मात्रा','Amount of air entering'),A('ઝટકા, કાળો ધુમાડો કે પાવર ઓછો','झटके, काला धुआँ या पावर कम','Hesitation, black smoke or low power')],
       ['TPS',A('થ્રોટલ કેટલો ખુલ્લો છે','थ्रॉटल कितना खुला है','How far the throttle is open'),A('એક્સિલરેટર પર ઝટકા','एक्सीलरेटर पर झटके','Jerky acceleration')],
       ['ECT',A('કૂલન્ટનું તાપમાન','कूलेंट का तापमान','Coolant temperature'),A('ઠંડીમાં સ્ટાર્ટ ન થાય, ફેન ન ચાલે','ठंड में स्टार्ट न हो, फैन न चले','Hard cold start, fan doesn\'t run')],
       [tx('નોક','नॉक','Knock'),A('ડિટોનેશન (નોકિંગ)','डिटोनेशन (नॉकिंग)','Detonation (knock)'),A('પાવર ઓછો, એન્જિનને નુકસાન','पावर कम, इंजन को नुकसान','Low power, engine damage')],
-      ['O₂',A('એક્ઝોસ્ટમાં બાકી ઓક્સિજન','एग्ज़ॉस्ट में बचा ऑक्सीजन','Oxygen left in the exhaust'),A('માઇલેજ ઓછું, કાળો ધુમાડો','माइलेज कम, काला धुआँ','Poor mileage, black smoke')],
+      [tx('O₂ (કેટ પછી)','O₂ (कैट के बाद)','O₂ (after cat)'),A('કેટ કેટલો સારો કામ કરે છે','कैट कितना अच्छा काम करता है','How well the cat works'),A('ચેક-એન્જિન લાઇટ (કેટ કાર્યક્ષમતા)','चेक-इंजन लाइट (कैट दक्षता)','Check-engine light (cat efficiency)')],
+      [tx('ઓઇલ લેવલ','ऑयल लेवल','Oil level'),A('સમ્પમાં ઓઇલનું લેવલ અને તાપમાન','संप में ऑयल का लेवल और तापमान','Oil level and temperature in the sump'),A('ઓઇલ ઓછું હોય તો ચેતવણી ન મળે','ऑयल कम हो तो चेतावनी न मिले','No low-oil warning')],
+      [tx('O₂ (કેટ પહેલાં)','O₂ (कैट से पहले)','O₂ (before cat)'),A('એક્ઝોસ્ટમાં બાકી ઓક્સિજન','एग्ज़ॉस्ट में बचा ऑक्सीजन','Oxygen left in the exhaust'),A('માઇલેજ ઓછું, કાળો ધુમાડો','माइलेज कम, काला धुआँ','Poor mileage, black smoke')],
       [tx('ઓઇલ પ્રેશર સ્વિચ','ऑयल प्रेशर स्विच','Oil pressure switch'),A('ઓઇલ દબાણ ઓછું તો લાઇટ','ऑयल दबाव कम हो तो लाइट','Lights the lamp on low pressure'),A('ચેતવણી ન મળે — એન્જિન સીઝ થઈ શકે','चेतावनी न मिले — इंजन सीज़ हो सकता है','No warning — engine can seize')]
     ].map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+L3(r[1])+'</td><td>'+L3(r[2])+'</td></tr>').join('')+'</table></div>')+
   sec(10,tx('ટર્બોચાર્જર અને ઇન્ટરકૂલર','टर्बोचार्जर और इंटरकूलर','Turbocharger & intercooler'),
@@ -1839,7 +1910,9 @@ const Q=[
  {q:A('ઇન્ટરકૂલરનું મુખ્ય કામ શું છે?','इंटरकूलर का मुख्य काम क्या है?','What is the main job of the intercooler?'),o:[A('ટર્બોમાંથી આવતી ગરમ હવા ઠંડી કરવી','टर्बो से आने वाली गर्म हवा ठंडी करना','Cool the hot air coming from the turbo'),A('એન્જિન ઓઇલ ઠંડું કરવું','इंजन ऑयल ठंडा करना','Cool the engine oil'),A('કૂલન્ટ ઠંડું કરવું','कूलेंट ठंडा करना','Cool the coolant'),A('એક્ઝોસ્ટ ગેસ ઠંડો કરવો','एग्ज़ॉस्ट गैस ठंडी करना','Cool the exhaust gas')],x:A('ઠંડી હવા ઘટ્ટ હોય — વધુ ઓક્સિજન, વધુ પાવર, નોકિંગ ઓછું.','ठंडी हवा घनी होती है — ज़्यादा ऑक्सीजन, ज़्यादा पावर, नॉकिंग कम.','Cooler air is denser — more oxygen, more power, less knock.')},
  {q:A('ટર્બોમાં વેસ્ટગેટ શા માટે હોય છે?','टर्बो में वेस्टगेट क्यों होता है?','Why does a turbo have a wastegate?'),o:[A('બૂસ્ટ દબાણ મર્યાદામાં રાખવા','बूस्ट दबाव सीमा में रखने के लिए','To limit the boost pressure'),A('ઓઇલ દબાણ વધારવા','ऑयल दबाव बढ़ाने के लिए','To raise oil pressure'),A('હવા ગાળવા','हवा छानने के लिए','To filter the air'),A('ટર્બોને ઠંડો કરવા','टर्बो को ठंडा करने के लिए','To cool the turbo')],x:A('મર્યાદા પહોંચે ત્યારે વધારાનો એક્ઝોસ્ટ ટર્બાઇનની બહારથી જાય.','सीमा पहुँचने पर अतिरिक्त एग्ज़ॉस्ट टर्बाइन से बाहर जाता है.','At the limit, surplus exhaust bypasses the turbine.')},
  {q:A('ટર્બોના બેરિંગને લુબ્રિકેશન ક્યાંથી મળે છે?','टर्बो के बेयरिंग को लुब्रिकेशन कहाँ से मिलता है?','Where do the turbo bearings get their lubrication?'),o:[A('એન્જિન ઓઇલ ફીડ લાઇનથી','इंजन ऑयल फीड लाइन से','From an engine-oil feed line'),A('ગ્રીસ ભરેલા સીલ બેરિંગથી','ग्रीस भरे सील बेयरिंग से','Sealed grease-packed bearings'),A('ફ્યુઅલથી','फ्यूल से','From the fuel'),A('કૂલન્ટથી','कूलेंट से','From the coolant')],x:A('ફીડ લાઇન દબાણવાળું ઓઇલ આપે, રિટર્ન લાઇન તેને સમ્પમાં પાછું લાવે.','फीड लाइन दबाव वाला ऑयल देती है, रिटर्न लाइन उसे संप में वापस लाती है.','The feed line supplies pressurised oil; the return line drains it to the sump.')},
- {q:A('ભારે ડ્રાઇવ પછી ટર્બો એન્જિન તરત બંધ કેમ ન કરવું?','भारी ड्राइव के बाद टर्बो इंजन तुरंत बंद क्यों न करें?','Why not switch a turbo engine off straight after hard driving?'),o:[A('ઓઇલ વગર ગરમ ટર્બોના બેરિંગ ખરાબ થાય','ऑयल के बिना गर्म टर्बो के बेयरिंग खराब होते हैं','The hot turbo bearings get damaged without oil flow'),A('બેટરી ડાઉન થાય','बैटरी डाउन होती है','The battery goes flat'),A('ફ્યુઅલ વધુ વપરાય','फ्यूल ज़्यादा लगता है','It uses more fuel'),A('એર ફિલ્ટર બંધ થાય','एयर फ़िल्टर बंद होता है','The air filter clogs')],x:A('1 મિનિટ આઇડલ રાખવાથી ઓઇલ ફરતું રહે અને ટર્બો ઠંડો થાય — ઓઇલ કોકિંગ થતું નથી.','1 मिनट आइडल रखने से ऑयल घूमता रहता है और टर्बो ठंडा होता है — ऑयल कोकिंग नहीं होती.','A minute at idle keeps oil flowing while the turbo cools — no oil coking.')}
+ {q:A('ભારે ડ્રાઇવ પછી ટર્બો એન્જિન તરત બંધ કેમ ન કરવું?','भारी ड्राइव के बाद टर्बो इंजन तुरंत बंद क्यों न करें?','Why not switch a turbo engine off straight after hard driving?'),o:[A('ઓઇલ વગર ગરમ ટર્બોના બેરિંગ ખરાબ થાય','ऑयल के बिना गर्म टर्बो के बेयरिंग खराब होते हैं','The hot turbo bearings get damaged without oil flow'),A('બેટરી ડાઉન થાય','बैटरी डाउन होती है','The battery goes flat'),A('ફ્યુઅલ વધુ વપરાય','फ्यूल ज़्यादा लगता है','It uses more fuel'),A('એર ફિલ્ટર બંધ થાય','एयर फ़िल्टर बंद होता है','The air filter clogs')],x:A('1 મિનિટ આઇડલ રાખવાથી ઓઇલ ફરતું રહે અને ટર્બો ઠંડો થાય — ઓઇલ કોકિંગ થતું નથી.','1 मिनट आइडल रखने से ऑयल घूमता रहता है और टर्बो ठंडा होता है — ऑयल कोकिंग नहीं होती.','A minute at idle keeps oil flowing while the turbo cools — no oil coking.')},
+ {q:A('કેટાલિટિક કન્વર્ટર પછીનું O₂ સેન્સર મુખ્યત્વે શું તપાસે છે?','कैटेलिटिक कन्वर्टर के बाद वाला O₂ सेंसर मुख्य रूप से क्या जाँचता है?','What does the O₂ sensor after the catalytic converter mainly check?'),o:[A('કેટ બરાબર કામ કરે છે કે નહીં','कैट ठीक काम करता है या नहीं','Whether the cat is working'),A('ટર્બો બૂસ્ટ','टर्बो बूस्ट','Turbo boost'),A('ઓઇલ લેવલ','ऑयल लेवल','Oil level'),A('કૂલન્ટ તાપમાન','कूलेंट तापमान','Coolant temperature')],x:A('સારા કેટ પછી સિગ્નલ સ્થિર રહે; ઉપર-નીચે થાય તો કેટ ખરાબ.','अच्छे कैट के बाद सिग्नल स्थिर रहता है; ऊपर-नीचे हो तो कैट खराब.','Behind a good cat the signal stays steady; if it swings, the cat is failing.')},
+ {q:A('ટર્બો એન્જિનમાં બૂસ્ટ દબાણ કયું સેન્સર માપે છે?','टर्बो इंजन में बूस्ट दबाव कौन-सा सेंसर मापता है?','Which sensor measures boost pressure on a turbo engine?'),o:[A('TMAP (બૂસ્ટ પ્રેશર સેન્સર)','TMAP (बूस्ट प्रेशर सेंसर)','TMAP (boost pressure sensor)'),A('CKP સેન્સર','CKP सेंसर','CKP sensor'),A('નોક સેન્સર','नॉक सेंसर','Knock sensor'),A('ECT સેન્સર','ECT सेंसर','ECT sensor')],x:A('ઇન્ટરકૂલર પછીની પાઇપમાં દબાણ અને તાપમાન માપે; ECU વેસ્ટગેટ ચલાવે.','इंटरकूलर के बाद की पाइप में दबाव और तापमान मापता है; ECU वेस्टगेट चलाता है.','It reads pressure and temperature after the intercooler; the ECU then controls the wastegate.')}
 ];
 const MQ={started:false,order:[],i:0,ok:0,done:0,wrong:[],ans:false,cur:null};
 function mqIntro(){$('mqBox').innerHTML='<div class="card res"><div style="font-size:44px">📝</div><h2 style="font-size:24px">'+tx('એન્જિન MCQ','इंजन MCQ','Engine MCQ')+'</h2><p style="font-size:16px">'+Q.length+' '+tx('પ્રશ્નો','प्रश्न','questions')+'</p><p style="color:var(--mute)">'+tx('ITI, GSRTC હેલ્પર ભરતી અને ટ્રેડ થિયરી પરીક્ષા માટે','ITI, भर्ती परीक्षा और ट्रेड थ्योरी के लिए','For ITI, recruitment and trade-theory exams')+'</p><div class="mact" style="justify-content:center"><button class="btn pri" id="mqGo" style="font-size:18px;padding:12px 22px">▶ '+tx('શરૂ કરો','शुरू करें','Start')+'</button></div></div>';$('mqGo').onclick=()=>{ac();SND.click();mqStart();};}
