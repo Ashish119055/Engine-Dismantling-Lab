@@ -1340,7 +1340,7 @@ function updateFlows(dDeg,dt,moving){
   airFlow.im.visible=exhFlow.im.visible=false;
   if(paintedSmoke!==state.smoke){paintedSmoke=state.smoke;EX_B.setHex(state.smoke==='normal'?0xb8bdc3:SMOKE[state.smoke].c);const ec=exhCol();exhPipes.forEach(fp=>paintPipe(fp,ec,ec,1));}
   const ai=inStroke(360),ei=inStroke(180),see=state.xray||state.cut;
-  airPipes.concat(exhPipes).forEach(fp=>{fp.m.renderOrder=19;});
+  airPipes.concat(exhPipes).forEach(fp=>{fp.m.renderOrder=19;const cp=state.cut?[cutPlane]:null;if(fp.m.material.clippingPlanes!==cp&&!(cp&&fp.m.material.clippingPlanes)){fp.m.material.clippingPlanes=cp;fp.m.material.needsUpdate=true;}}); // cutaway also cuts the flow tubes, like the manifolds
   airPipes.forEach((fp,k)=>{fp.m.visible=airOn&&k===ai;fp.t.offset.x-=dDeg*0.012;});
   exhPipes.forEach((fp,k)=>{fp.m.visible=exOn&&k===ei;fp.t.offset.x-=dDeg*0.012;});
   if(exOn&&dDeg>0&&Math.random()<Math.min(1,dDeg*0.08))spawnPuff();
