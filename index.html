@@ -572,7 +572,7 @@ function sensor(g,p,dir,o){const s=new THREE.Group();s.position.copy(p);s.quater
   if(o.body){const [r,h,mat]=o.body;s.add(mesh(cylY(r,h,24),mat,0,y+h/2,0));y+=h;}
   if(o.box){const [w,h,d,mat]=o.box;s.add(mesh(rbox(w,h,d,0.02,0.008),mat,0,y+h/2,0));y+=h;}
   const [pw,ph,pd,pm]=o.plug;const px=o.plugX||0;s.add(mesh(rbox(pw,ph,pd,0.012,0.006),pm,px,y+ph/2,0));s.add(mesh(rbox(0.02,ph*0.6,pd*0.5,0.005,0.003),pm,px+pw/2+0.008,y+ph*0.55,0));
-  const top=y+ph;s.add(tube([V(px,top-0.005,0),V(px,top+0.06,0),V(px+0.08,top+0.11,0.02),V(px+0.2,top+0.12,0.05)],o.wireR||0.018,o.wireMat||M.loom,24,8));
+  const top=y+ph;if(!o.noWire)s.add(tube([V(px,top-0.005,0),V(px,top+0.06,0),V(px+0.08,top+0.11,0.02),V(px+0.2,top+0.12,0.05)],o.wireR||0.018,o.wireMat||M.loom,24,8));
   return s;}
 // turbo layout: shaft along x below the exhaust collector; turbine at x=0, compressor at x=0.5
 const TURBO={x:0.25,y:0.42,z:1.42};
@@ -1186,16 +1186,21 @@ part('o2Upstream',{sys:'exh',dir:[0,0.5,1],dist:1.4,
   d:A('ટર્બો પછી ડાઉનપાઇપમાં એક્ઝોસ્ટમાં બાકી ઓક્સિજન માપે. ECU આ પરથી હવા-ફ્યુઅલ ગુણોત્તર 14.7:1 ની નજીક રાખે. ગરમ થયા પછી જ કામ કરે, એટલે અંદર હીટર હોય.','टर्बो के बाद डाउनपाइप में एग्ज़ॉस्ट में बचा ऑक्सीजन मापता है. ECU इससे हवा-फ्यूल अनुपात 14.7:1 के पास रखता है. गर्म होने के बाद ही काम करता है, इसलिए अंदर हीटर होता है.','Measures leftover oxygen in the exhaust in the downpipe after the turbo. The ECU uses it to hold the air-fuel ratio near 14.7:1. It only works hot, so it has a built-in heater.'),
   m:A('ઝિર્કોનિયા સિરામિક, સ્ટીલ બોડી','ज़िरकोनिया सिरेमिक, स्टील बॉडी','Zirconia ceramic, steel body'),s:A('5-વાયર વાઇડબેન્ડ (LSU)','5-वायर वाइडबैंड (LSU)','5-wire wideband (LSU)'),f:A('22 mm, 45 N·m + એન્ટી-સીઝ','22 mm, 45 N·m + एंटी-सीज़','22 mm, 45 N·m + anti-seize'),
   h:A('કનેક્ટર કાઢો → 22 mm સ્લોટેડ O₂ સોકેટ (વાયર માટે ખાંચવાળું) થી ખોલો. એન્જિન થોડું ગરમ હોય તો સહેલાઈથી ખૂલે.','कनेक्टर निकालें → 22 mm स्लॉटेड O₂ सॉकेट (तार के लिए खाँचे वाला) से खोलें. इंजन थोड़ा गर्म हो तो आसानी से खुलता है.','Unplug → undo with a 22 mm slotted O₂ socket (slot for the wire). Comes out easier with the engine slightly warm.')},g=>{
-  sensor(g,V(-0.53,0.33,1.52),V(0,0.45,0.9),{hex:0.075,body:[0.05,0.1,M.steel],plug:[0.045,0.09,0.045,M.oxWire],wireR:0.016,wireMat:M.oxWire});
-  g.add(tube([V(-0.53,0.6,1.82),V(-0.5,0.85,1.95),V(-0.35,0.95,2.0)],0.014,M.oxWire,16,6));g.add(mesh(rbox(0.12,0.08,0.08,0.015),M.plugBlack,-0.3,0.96,2.0));
+  sensor(g,V(-0.53,0.33,1.52),V(0,0.45,0.9),{hex:0.075,body:[0.05,0.1,M.steel],plug:[0.045,0.09,0.045,M.oxWire],noWire:true});
+  // wire runs back to a connector clipped on a bracket bolted to the block (real routing — never left hanging)
+  g.add(tube([V(-0.53,0.42,1.71),V(-0.53,0.6,1.76),V(-0.6,0.9,1.4),V(-0.64,1.02,1.05),V(-0.65,1.05,0.97)],0.014,M.oxWire,40,6));
+  g.add(mesh(rbox(0.2,0.16,0.02,0.01,0.004),M.steel,-0.65,1.05,0.885));bolt(g,-0.72,1.1,0.895,'z');
+  g.add(mesh(rbox(0.12,0.08,0.08,0.015),M.plugBlack,-0.62,1.05,0.94));g.add(tube([V(-0.56,1.05,0.94),V(-0.45,1.07,0.93),V(-0.3,1.12,0.92)],0.018,M.loom,12,6));
 });
 part('o2Downstream',{sys:'exh',dir:[0,0.5,1],dist:1.4,
   n:A('O₂ સેન્સર — કેટ પછી','O₂ सेंसर — कैट के बाद','O₂ sensor — after cat'),
   d:A('કેટ પછીનો સેન્સર કેટ બરાબર કામ કરે છે કે નહીં તે તપાસે. સારા કેટ પછી સિગ્નલ લગભગ સ્થિર રહે; પહેલાના સેન્સર જેવું ઉપર-નીચે થાય તો કેટ ખરાબ (ચેક-એન્જિન લાઇટ).','कैट के बाद वाला सेंसर कैट ठीक काम कर रहा है या नहीं यह जाँचता है. अच्छे कैट के बाद सिग्नल लगभग स्थिर रहता है; पहले वाले सेंसर जैसा ऊपर-नीचे हो तो कैट खराब (चेक-इंजन लाइट).','The post-cat sensor checks the catalytic converter. Behind a good cat its signal stays almost steady; if it swings like the front sensor, the cat is failing (check-engine light).'),
   m:A('ઝિર્કોનિયા સિરામિક, સ્ટીલ બોડી','ज़िरकोनिया सिरेमिक, स्टील बॉडी','Zirconia ceramic, steel body'),s:A('4-વાયર, 0.1–0.9 V','4-वायर, 0.1–0.9 V','4-wire, 0.1–0.9 V'),f:A('22 mm, 45 N·m + એન્ટી-સીઝ','22 mm, 45 N·m + एंटी-सीज़','22 mm, 45 N·m + anti-seize'),
   h:A('કનેક્ટર કાઢો → 22 mm સ્લોટેડ O₂ સોકેટથી ખોલો.','कनेक्टर निकालें → 22 mm स्लॉटेड O₂ सॉकेट से खोलें.','Unplug → undo with a 22 mm slotted O₂ socket.')},g=>{
-  sensor(g,V(-1.57,-0.7,1.38),V(0,0.55,0.85),{hex:0.075,body:[0.05,0.1,M.steel],plug:[0.045,0.09,0.045,M.oxWire],wireR:0.016,wireMat:M.oxWire});
-  g.add(tube([V(-1.57,-0.42,1.66),V(-1.55,-0.2,1.8),V(-1.4,-0.1,1.86)],0.014,M.oxWire,16,6));g.add(mesh(rbox(0.12,0.08,0.08,0.015),M.plugBlack,-1.35,-0.09,1.87));
+  sensor(g,V(-1.57,-0.7,1.38),V(0,0.55,0.85),{hex:0.075,body:[0.05,0.1,M.steel],plug:[0.045,0.09,0.045,M.oxWire],noWire:true});
+  g.add(tube([V(-1.57,-0.57,1.57),V(-1.57,-0.45,1.62),V(-1.52,-0.3,1.25),V(-1.47,-0.22,1.0),V(-1.45,-0.2,0.97)],0.014,M.oxWire,40,6));
+  g.add(mesh(rbox(0.2,0.16,0.02,0.01,0.004),M.steel,-1.45,-0.2,0.885));bolt(g,-1.52,-0.15,0.895,'z');
+  g.add(mesh(rbox(0.12,0.08,0.08,0.015),M.plugBlack,-1.42,-0.2,0.94));g.add(tube([V(-1.36,-0.2,0.94),V(-1.25,-0.18,0.93),V(-1.1,-0.13,0.92)],0.018,M.loom,12,6));
 });
 part('oilLevelSensor',{sys:'lube',dir:[0,-1,0],dist:1.0,
   n:A('ઓઇલ લેવલ અને ટેમ્પરેચર સેન્સર','ऑयल लेवल और टेम्परेचर सेंसर','Oil level & temperature sensor'),
