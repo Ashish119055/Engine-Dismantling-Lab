@@ -32,6 +32,9 @@
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--fb);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
 .wrap{max-width:1280px;margin:0 auto;padding:12px 16px 40px}
+/* embedded in a blog iframe that sizes itself to the page: fixed heights (vh would grow the frame forever) */
+html.embed .bay{height:460px}@media (min-width:980px){html.embed .bay,html.embed .simmain.demo .bay{height:720px;max-height:none}html.embed .simmain.demo .bay{height:560px}}
+html.embed body.fs .bay{height:calc(100vh - 96px)}
 body.fs .wrap{max-width:none;padding-top:8px}body.fs .bay{max-height:none!important}
 body.fsx{position:fixed;inset:0;overflow:auto;z-index:100;background:var(--bg)}
 #fsBtn{font-weight:700;white-space:nowrap}
@@ -330,6 +333,7 @@ footer{text-align:center;color:var(--mute);font-size:12.5px;margin-top:22px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
+if(window.parent!==window)document.documentElement.classList.add('embed');
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
@@ -1808,6 +1812,9 @@ $('fsBtn').onclick=()=>{ac();SND.click();document.body.classList.contains('fs')?
 // on a computer, the first click anywhere opens full screen automatically (browsers allow it only after a click)
 if(matchMedia('(min-width:980px) and (pointer:fine)').matches){const once=e=>{document.removeEventListener('pointerdown',once,true);if(e.target.closest&&e.target.closest('#fsBtn'))return;if(!document.body.classList.contains('fs')&&(document.fullscreenEnabled||document.webkitFullscreenEnabled))fsEnter();};document.addEventListener('pointerdown',once,true);}
 fsLabel();
+/* auto-height when embedded (blog): same message as the other ITI labs */
+(function(){if(window.parent===window)return;let lastH=0;const send=()=>{if(document.body.classList.contains('fs'))return;const w=document.querySelector('.wrap');const h=Math.ceil(w.getBoundingClientRect().bottom+(window.scrollY||0)+8);if(Math.abs(h-lastH)>4){lastH=h;try{window.parent.postMessage({dmHeight:h},"*");}catch(e){}}};
+  try{new ResizeObserver(send).observe(document.querySelector('.wrap'));}catch(e){setInterval(send,800);}window.addEventListener("load",send);setTimeout(send,600);document.addEventListener('click',()=>setTimeout(send,350));})();
 let last=performance.now(),uiTick=0;
 /* render only while something changes (camera, engine, animation, input) — idle engine costs ~0 GPU */
 let WAKE=performance.now();const wake=()=>{WAKE=performance.now();};
