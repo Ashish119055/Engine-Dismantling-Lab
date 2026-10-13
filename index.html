@@ -578,7 +578,7 @@ function sensor(g,p,dir,o){const s=new THREE.Group();s.position.copy(p);s.quater
 const TURBO={x:0.25,y:0.42,z:1.42};
 const TURBO_IN_PATH=[V(-3.2,2.86,-0.1),V(-3.2,2.8,0.4),V(-3.05,2.4,1.1),V(-2.6,1.7,1.8),V(-1.6,1.15,2.1),V(0.4,1.15,2.1),V(1.05,1.05,1.9),V(1.15,0.7,1.55),V(0.95,0.45,1.42),V(0.78,0.42,1.42)];
 const HOT_PATH=[V(0.52,0.02,1.56),V(0.56,-0.2,1.72),V(0.75,-0.25,2.0),V(1.1,-0.18,2.2),V(1.33,-0.15,2.26)];
-const COLD_PATH=[V(-1.33,-0.15,2.26),V(-1.6,-0.1,2.0),V(-2.45,0.25,1.75),V(-2.8,0.95,0.95),V(-2.8,1.65,-0.4),V(-2.6,1.85,-1.2),V(-2.27,1.85,-1.35)];
+const COLD_PATH=[V(-1.33,-0.15,2.26),V(-1.6,-0.1,2.0),V(-2.45,0.25,1.75),V(-2.8,0.95,0.95),V(-2.8,1.65,-0.4),V(-2.72,1.85,-1.22),V(-2.47,1.85,-1.35)];
 const AB={crank:{y:0,z:0,r:0.34},alt:{y:0.85,z:-1.15,r:0.13},ac:{y:-0.15,z:1.25,r:0.27},idl:{y:1.3,z:0.35,r:0.13}};
 
 /* ---------------- parts registry ---------------- */
@@ -634,7 +634,8 @@ part('fuelRail',{sys:'fuel',dir:[0,-0.4,-1],dist:1.4,requires:['engineCover'],
   g.add(mesh(cylX(0.05,3.6),M.steel,0,2.25,-1.05));
   for(const e of [-1.8,1.8])g.add(mesh(new THREE.SphereGeometry(0.05,16,12),M.steel,e,2.25,-1.05));
   XS.forEach(x=>{g.add(between(V(x,2.25,-1.05),V(x,2.4,-0.88),0.042,M.plastic,20));g.add(between(V(x,2.25,-1.05),V(x,2.32,-0.97),0.05,M.copper,20));g.add(mesh(rbox(0.07,0.07,0.08,0.01),M.grey,x+0.06,2.33,-1.06));});
-  g.add(tube([V(1.8,2.25,-1.05),V(2.15,2.2,-1.15),V(2.3,1.6,-1.45),V(2.35,0.9,-1.6)],0.025,M.steel,48,8));
+  g.add(tube([V(1.8,2.25,-1.05),V(2.15,2.2,-1.15),V(2.3,1.6,-1.45),V(2.35,0.9,-1.6)],0.025,M.steel,48,8)); // feed line from the tank
+  g.add(mesh(rbox(0.07,0.11,0.07,0.015),M.ceramic,2.35,0.82,-1.6));g.add(mesh(cylY(0.016,0.06,10),M.steel,2.35,0.74,-1.6)); // quick-connector
 });
 part('fuelRegulator',{sys:'fuel',dir:[-1,0.3,-0.5],dist:1.2,requires:['engineCover'],
   n:A('ફ્યુઅલ પ્રેશર રેગ્યુલેટર અને રિટર્ન લાઇન','फ्यूल प्रेशर रेगुलेटर और रिटर्न लाइन','Fuel pressure regulator & return line'),
@@ -650,11 +651,13 @@ part('fuelRegulator',{sys:'fuel',dir:[-1,0.3,-0.5],dist:1.2,requires:['engineCov
   g.add(mesh(cylY(0.022,0.08,12),M.steel,-1.95,2.15,-1.05));    // return outlet
   g.add(mesh(rbox(0.03,0.05,0.22,0.008,0.004),M.steel,-1.9,2.25,-1.05)); // retaining clip
   // vacuum / boost reference hose to the intake plenum
-  g.add(tube([V(-2.11,2.25,-1.05),V(-2.2,2.2,-1.25),V(-2.05,2.05,-1.6),V(-1.78,1.9,-1.66)],0.02,M.rubber,32,8));
-  g.add(mesh(cylZ(0.02,0.05,10),M.intake,-1.78,1.9,-1.645));
+  g.add(between(V(-1.78,2.03,-1.535),V(-1.78,2.16,-1.665),0.018,M.intake,10));g.add(between(V(-1.78,2.04,-1.545),V(-1.78,2.07,-1.575),0.03,M.intake,12)); // nipple cast into the plenum
+  g.add(tube([V(-2.11,2.25,-1.05),V(-2.25,2.3,-1.35),V(-2.05,2.28,-1.68),V(-1.85,2.2,-1.72),V(-1.78,2.13,-1.635)],0.024,M.rubber,40,8));
+  {const c=new THREE.Mesh(new THREE.TorusGeometry(0.026,0.006,6,16),M.steel);c.position.set(-1.78,2.12,-1.625);c.quaternion.setFromUnitVectors(V(0,0,1),V(0,1,-1).normalize());g.add(c);}
   // return line back to the tank
   g.add(tube([V(-1.95,2.11,-1.05),V(-1.98,1.75,-1.02),V(-2.12,1.45,-1.12),V(-2.18,0.9,-1.18),V(-2.22,0.35,-1.35)],0.022,M.rubber,48,8));
   for(const q of [V(-1.95,2.09,-1.05),V(-2.21,0.4,-1.33)]){const c=new THREE.Mesh(new THREE.TorusGeometry(0.03,0.007,6,16),M.steel);c.position.copy(q);c.rotation.x=Math.PI/2;g.add(c);}
+  g.add(mesh(rbox(0.07,0.11,0.07,0.015),M.ceramic,-2.22,0.3,-1.35));g.add(mesh(cylY(0.016,0.06,10),M.steel,-2.22,0.22,-1.35)); // quick-connector (to the tank line)
 });
 part('intakeManifold',{sys:'air',dir:[0,0.1,-1],dist:2.7,requires:['fuelRail','airIntake'],
   n:A('ઇન્ટેક મેનિફોલ્ડ અને થ્રોટલ','इनटेक मैनिफोल्ड और थ्रॉटल','Intake manifold & throttle'),
@@ -1168,8 +1171,8 @@ part('tmapSensor',{sys:'turbo',dir:[0,1,-0.3],dist:1.3,
   d:A('ઇન્ટરકૂલર પછીની પાઇપમાં હવાનું દબાણ (બૂસ્ટ) અને તાપમાન માપે. ECU આ પરથી વેસ્ટગેટ ચલાવે અને બૂસ્ટ મર્યાદામાં રાખે. ખરાબ થાય તો એન્જિન લિમ્પ મોડમાં જાય (પાવર ઓછો).','इंटरकूलर के बाद की पाइप में हवा का दबाव (बूस्ट) और तापमान मापता है. ECU इससे वेस्टगेट चलाता है और बूस्ट सीमा में रखता है. खराब हो तो इंजन लिम्प मोड में जाता है (पावर कम).','Measures charge-air pressure (boost) and temperature after the intercooler. The ECU uses it to run the wastegate and hold boost. If it fails the engine drops into limp mode (low power).'),
   m:A('પ્લાસ્ટિક બોડી, સિલિકોન પ્રેશર ચિપ','प्लास्टिक बॉडी, सिलिकॉन प्रेशर चिप','Plastic body, silicon pressure chip'),s:A('0.2–2.5 bar (abs), 4-પિન','0.2–2.5 bar (abs), 4-पिन','0.2–2.5 bar (abs), 4-pin'),f:A('1 × M6 બોલ્ટ 5 N·m','1 × M6 बोल्ट 5 N·m','1 × M6 bolt 5 N·m'),
   h:A('કનેક્ટર કાઢો → 10 mm બોલ્ટ ખોલો → ફેરવીને ખેંચો. નવી O-રિંગ લગાવો, નહીં તો બૂસ્ટ લીક.','कनेक्टर निकालें → 10 mm बोल्ट खोलें → घुमाकर खींचें. नई O-रिंग लगाएँ, नहीं तो बूस्ट लीक.','Unplug → undo the 10 mm bolt → twist and pull. Fit a new O-ring or boost will leak.')},g=>{
-  g.add(mesh(cylY(0.05,0.04,20),M.alu,-2.5,1.97,-1.28));
-  sensor(g,V(-2.5,1.99,-1.28),V(0,1,0),{ear:0.17,box:[0.12,0.07,0.1,M.sensorBody],plug:[0.1,0.07,0.1,M.plugBlack]});
+  g.add(mesh(cylY(0.05,0.04,20),M.alu,-2.62,1.96,-1.3));
+  sensor(g,V(-2.62,1.98,-1.3),V(0,1,0),{ear:0.17,box:[0.12,0.07,0.1,M.sensorBody],plug:[0.1,0.07,0.1,M.plugBlack]});
 });
 part('mapSensor',{sys:'air',dir:[0,1,-0.2],dist:1.3,
   n:A('મેનીફોલ્ડ પ્રેશર સેન્સર (MAP)','मैनिफोल्ड प्रेशर सेंसर (MAP)','Manifold pressure sensor (MAP)'),
@@ -1272,9 +1275,13 @@ part('chargePipes',{sys:'turbo',dir:[0,0.2,1],dist:1.8,requires:['engineCover'],
   h:A('દરેક સિલિકોન કપલરનો ક્લેમ્પ 8 mm સોકેટથી ઢીલો કરો → પાઇપ ફેરવીને ખેંચો. ઓઇલનો પાતળો પડ સામાન્ય છે; વધુ ઓઇલ હોય તો ટર્બો સીલ તપાસો.','हर सिलिकॉन कपलर का क्लैम्प 8 mm सॉकेट से ढीला करें → पाइप घुमाकर खींचें. ऑयल की पतली परत सामान्य है; ज़्यादा ऑयल हो तो टर्बो सील जाँचें.','Loosen each coupler clamp with an 8 mm socket → twist and pull the pipe. A light oil film is normal; lots of oil means worn turbo seals.')},g=>{
   g.add(tube(HOT_PATH,0.085,M.alu,64,14));g.add(tube(COLD_PATH,0.1,M.alu,96,16));
   // silicone couplers + clamps at each joint
-  for(const [a,b] of [[HOT_PATH[0],HOT_PATH[1]],[HOT_PATH[4],HOT_PATH[3]],[COLD_PATH[0],COLD_PATH[1]],[COLD_PATH[6],COLD_PATH[5]]]){
+  for(const [a,b] of [[HOT_PATH[0],HOT_PATH[1]],[HOT_PATH[4],HOT_PATH[3]],[COLD_PATH[0],COLD_PATH[1]]]){
     const d=b.clone().sub(a).normalize(),c=a.clone().addScaledVector(d,0.09);g.add(between(a,c.clone().addScaledVector(d,0.07),0.105,M.siliconeBlue,20));
     const t=new THREE.Mesh(new THREE.TorusGeometry(0.108,0.014,8,24),M.steel);t.position.copy(c);t.quaternion.setFromUnitVectors(V(0,0,1),d);g.add(t);}
+  // silicone reducer: Ø pipe (cold side) → Ø throttle inlet, a clamp on each end
+  const rd=new THREE.CylinderGeometry(0.215,0.108,0.24,36,1,true);rd.rotateZ(-Math.PI/2);g.add(mesh(rd,M.siliconeBlue,-2.39,1.85,-1.35));
+  const rdIn=new THREE.CylinderGeometry(0.2,0.098,0.24,36,1,true);rdIn.rotateZ(-Math.PI/2);g.add(mesh(rdIn,M.portIn,-2.39,1.85,-1.35));
+  for(const [x,r] of [[-2.3,0.215],[-2.48,0.11]]){const t=new THREE.Mesh(new THREE.TorusGeometry(r+0.004,0.014,8,32),M.steel);t.position.set(x,1.85,-1.35);t.rotation.y=Math.PI/2;g.add(t);}
 });
 part('intercooler',{sys:'turbo',dir:[0,0,1],dist:1.4,requires:['chargePipes'],
   n:A('ઇન્ટરકૂલર','इंटरकूलर','Intercooler'),
