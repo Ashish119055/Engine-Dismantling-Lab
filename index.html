@@ -969,7 +969,11 @@ part('flywheel',{sys:'bottom',dir:[0,0,-1],dist:1.6,requires:['starter'],
   d:A('ભારે ચકરડું; પાવર સ્ટ્રોક વચ્ચે ગતિ એકસરખી રાખે (ઊર્જા સંગ્રહ). તેના પર સ્ટાર્ટરની રિંગ ગિયર અને ક્લચ સપાટી.','भारी चक्का; पावर स्ट्रोक के बीच गति एक-सी रखता है (ऊर्जा संग्रह). इस पर स्टार्टर की रिंग गियर और क्लच सतह होती है.','Heavy wheel that stores energy and keeps rotation smooth between power strokes. Carries the starter ring gear and clutch face.'),
   m:A('કાસ્ટ આયર્ન, સ્ટીલ રિંગ ગિયર','कास्ट आयरन, स्टील रिंग गियर','Cast iron, steel ring gear'),s:A('Ø 270 mm, 120 દાંતા','Ø 270 mm, 120 दाँत','Ø 270 mm, 120 teeth'),f:A('6 × M10, 80 N·m','6 × M10, 80 N·m','6 × M10, 80 N·m')},g=>{
   const r=new THREE.Group();r.name='spin';g.add(r);
-  r.add(mesh(cylX(1.15,0.12,72),M.forged,-2.2,0,0));r.add(mesh(extX(gearShape(1.26,120,0.04,1.12),0.08,0,2),M.steel,-2.19,0,0));
+  r.add(mesh(cylX(1.15,0.12,72),M.forged,-2.2,0,0));const teeth=mesh(extX(gearShape(1.26,120,0.04,1.12),0.08,0,2),M.steel,-2.19,0,0);teeth.name='teeth';r.add(teeth);
+  // when spinning fast the 120 teeth blur into a ring (like a real flywheel / a camera) instead of strobing
+  const bl=new THREE.Shape();bl.absarc(0,0,1.245,0,TAU,false);bl.holes.push(circlePath(0,0,1.12));const blur=mesh(extX(bl,0.08,0,96),M.darkSteel,-2.19,0,0);blur.name='teethBlur';blur.visible=false;r.add(blur);
+  r.add(mesh(rbox(0.09,0.12,0.05,0.008,0.004),M.yellow,-2.19,1.2,0)); // paint mark on the ring gear
+  r.add(mesh(rbox(0.01,0.12,0.08,0.006,0.003),M.yellow,-2.262,1.1,0)); // paint mark on the outer face
   const face=new THREE.Mesh(new THREE.RingGeometry(0.5,1.05,72),M.machined);face.position.set(-2.262,0,0);face.rotation.y=-Math.PI/2;r.add(face);
   for(let i=0;i<6;i++){const a=i/6*TAU;bolt(r,-2.27,Math.cos(a)*0.2,Math.sin(a)*0.2,'-x');}
   r.add(mesh(rbox(0.01,0.3,0.06,0.006,0.003),M.yellow,-2.267,0.82,0));r.add(mesh(cylX(0.035,0.05,12),M.steel,-2.285,-0.36,0.12)); // TDC mark + dowel
@@ -2093,6 +2097,7 @@ function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
   if(state.running){const before=state.theta;const r=state.crankT>0?Math.min(state.rpm,150):state.rpm;if(state.crankT>0)state.crankT-=dt;const vis=r<=180?r:180+(r-180)*0.15;const d=dt*vis*6;dDeg+=d;state.theta=(state.theta+d)%720;
     if(AC&&!MUTE&&state.tab==='sim'&&state.crankT<=0&&state.rpm<=600&&!P.piston1.removed){for(let k=0;k<4;k++){const c0=cycleAngle(k,before),c1=cycleAngle(k,state.theta);if(c1<c0){SND.fire();break;}}}}
   if(dDeg)state.lastTurn=now;
+  {const fw=P.flywheel.group,tg=fw.getObjectByName('teeth'),tb=fw.getObjectByName('teethBlur');const fast=Math.abs(dDeg)>1.2;if(tg){tg.visible=!fast;tb.visible=fast;}}
   if(state.pending){state.pending.t-=dt;$('bCd').style.width=Math.max(0,100*(1-state.pending.t/state.pending.T))+'%';
     if(state.pending.t<=0){const id=state.pending.id;state.pending=null;$('bCd').style.width='0';if(!removePart(id))refresh();}}
   else if($('bCd').style.width&&$('bCd').style.width!=='0px')$('bCd').style.width='0';
