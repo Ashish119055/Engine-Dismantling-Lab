@@ -2102,7 +2102,6 @@ function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
   if(state.running){const before=state.theta;const r=state.crankT>0?Math.min(state.rpm,150):state.rpm;if(state.crankT>0)state.crankT-=dt;const vis=r<=180?r:180+(r-180)*0.15;const d=dt*vis*6;dDeg+=d;state.theta=(state.theta+d)%720;
     if(AC&&!MUTE&&state.tab==='sim'&&state.crankT<=0&&state.rpm<=600&&!P.piston1.removed){for(let k=0;k<4;k++){const c0=cycleAngle(k,before),c1=cycleAngle(k,state.theta);if(c1<c0){SND.fire();break;}}}}
   if(dDeg)state.lastTurn=now;
-  {const fw=P.flywheel.group,tg=fw.getObjectByName('teeth'),tb=fw.getObjectByName('teethBlur');const fast=Math.abs(dDeg)>1.2;if(tg){tg.visible=!fast;tb.visible=fast;}}
   if(state.pending){state.pending.t-=dt;$('bCd').style.width=Math.max(0,100*(1-state.pending.t/state.pending.T))+'%';
     if(state.pending.t<=0){const id=state.pending.id;state.pending=null;$('bCd').style.width='0';if(!removePart(id))refresh();}}
   else if($('bCd').style.width&&$('bCd').style.width!=='0px')$('bCd').style.width='0';
