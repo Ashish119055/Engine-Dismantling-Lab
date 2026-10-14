@@ -972,6 +972,7 @@ part('flywheel',{sys:'bottom',dir:[0,0,-1],dist:1.6,requires:['starter'],
   r.add(mesh(cylX(1.15,0.12,72),M.forged,-2.2,0,0));r.add(mesh(extX(gearShape(1.26,120,0.04,1.12),0.08,0,2),M.steel,-2.19,0,0));
   const face=new THREE.Mesh(new THREE.RingGeometry(0.5,1.05,72),M.machined);face.position.set(-2.262,0,0);face.rotation.y=-Math.PI/2;r.add(face);
   for(let i=0;i<6;i++){const a=i/6*TAU;bolt(r,-2.27,Math.cos(a)*0.2,Math.sin(a)*0.2,'-x');}
+  r.add(mesh(rbox(0.01,0.3,0.06,0.006,0.003),M.yellow,-2.267,0.82,0));r.add(mesh(cylX(0.035,0.05,12),M.steel,-2.285,-0.36,0.12)); // TDC mark + dowel
 });
 part('mainCaps',{sys:'bottom',dir:[0,-1,0],dist:0.75,requires:['piston1','piston2','piston3','piston4','oilPickup'],
   n:A('મેઇન બેરિંગ કેપ ×5','मेन बेयरिंग कैप ×5','Main bearing caps ×5'),
@@ -988,11 +989,14 @@ part('crankshaft',{sys:'bottom',dir:[0,-1,0],dist:0.4,internal:true,requires:['m
   m:A('ફોર્જ્ડ સ્ટીલ','फोर्ज्ड स्टील','Forged steel'),s:A('સ્ટ્રોક 86 mm, 8 કાઉન્ટરવેઇટ','स्ट्रोक 86 mm, 8 काउंटरवेट','Stroke 86 mm, 8 counterweights'),f:A('મેઇન કેપથી પકડાયેલો','मेन कैप से पकड़ा हुआ','Held by the main caps')},g=>{
   crankRot=new THREE.Group();g.add(crankRot);
   const edges=[-2.05];XS_ASC.forEach(x=>{edges.push(x-0.3,x+0.3);});edges.push(2.05);
-  for(let i=0;i<edges.length;i+=2){const a=edges[i],b=edges[i+1];crankRot.add(mesh(cylX(0.18,b-a),M.machined,(a+b)/2,0,0));}
+  for(let i=0;i<edges.length;i+=2){const a=edges[i],b=edges[i+1];crankRot.add(mesh(cylX(0.18,b-a),M.machined,(a+b)/2,0,0));
+    if(b-a>0.2)crankRot.add(mesh(cylY(0.032,0.012,14),M.slot,(a+b)/2,0.176,0));} // oil hole in each main journal
   const w=new THREE.Shape();w.moveTo(0.17,0.4);w.absarc(0,0.4,0.17,0,Math.PI,false);w.lineTo(-0.3,0.02);w.absarc(0,0,0.56,Math.PI+0.45,TAU-0.45,false);w.lineTo(0.3,0.02);w.lineTo(0.17,0.4);
   const webG=extX(w,0.1,0.012,32);
-  XS.forEach((x,k)=>{const t=new THREE.Group();t.rotation.x=PHI[k];crankRot.add(t);t.add(mesh(webG,M.forged,x-0.25,0,0));t.add(mesh(webG,M.forged,x+0.25,0,0));t.add(mesh(cylX(0.15,0.42),M.machined,x,CR,0));});
+  XS.forEach((x,k)=>{const t=new THREE.Group();t.rotation.x=PHI[k];crankRot.add(t);t.add(mesh(webG,M.forged,x-0.25,0,0));t.add(mesh(webG,M.forged,x+0.25,0,0));t.add(mesh(cylX(0.15,0.42),M.machined,x,CR,0));t.add(mesh(cylY(0.03,0.012,14),M.slot,x,CR+0.146,0));});
   crankRot.add(mesh(cylX(0.13,0.62),M.machined,2.36,0,0));crankRot.add(mesh(cylX(0.3,0.09),M.forged,-2.095,0,0));
+  crankRot.add(mesh(rbox(0.5,0.02,0.05,0.004,0.003),M.slot,2.42,0.128,0)); // keyway on the nose
+  crankRot.add(mesh(rbox(0.095,0.03,0.07,0.006,0.004),M.yellow,-2.095,0.29,0)); // paint mark on the flange
 });
 part('block',{sys:'block',fixed:true,housing:true,
   n:A('સિલિન્ડર બ્લોક','सिलेंडर ब्लॉक','Cylinder block'),
@@ -2086,7 +2090,7 @@ controls.addEventListener('change',wake);new ResizeObserver(wake).observe(view);
 function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
   demoTick(dt);
   let dDeg=state.handD;state.handD=0;
-  if(state.running){const before=state.theta;const r=state.crankT>0?Math.min(state.rpm,150):state.rpm;if(state.crankT>0)state.crankT-=dt;const d=dt*r*6;dDeg+=d;state.theta=(state.theta+d)%720;
+  if(state.running){const before=state.theta;const r=state.crankT>0?Math.min(state.rpm,150):state.rpm;if(state.crankT>0)state.crankT-=dt;const vis=r<=180?r:180+(r-180)*0.15;const d=dt*vis*6;dDeg+=d;state.theta=(state.theta+d)%720;
     if(AC&&!MUTE&&state.tab==='sim'&&state.crankT<=0&&state.rpm<=600&&!P.piston1.removed){for(let k=0;k<4;k++){const c0=cycleAngle(k,before),c1=cycleAngle(k,state.theta);if(c1<c0){SND.fire();break;}}}}
   if(dDeg)state.lastTurn=now;
   if(state.pending){state.pending.t-=dt;$('bCd').style.width=Math.max(0,100*(1-state.pending.t/state.pending.T))+'%';
